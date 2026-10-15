@@ -175,7 +175,7 @@ class WorkspaceUserPropertiesSerializer(BaseSerializer):
     class Meta:
         model = WorkspaceUserProperties
         fields = "__all__"
-        read_only_fields = ["workspace", "user"]
+        read_only_fields = ["workspace", "user", "project_overview_preferences"]
 
 
 class WorkspaceUserLinkSerializer(BaseSerializer):

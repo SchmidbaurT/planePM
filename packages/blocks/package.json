@@ -9,6 +9,8 @@
     "**/*.css"
   ],
   "exports": {
+    "./brand": "./dist/brand/index.js",
+    "./brand/styles.css": "./dist/brand.css",
     "./auth": "./dist/auth/index.js",
     "./breadcrumb": "./dist/breadcrumb/index.js",
     "./card": "./dist/card/index.js",

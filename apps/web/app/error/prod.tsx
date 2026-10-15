@@ -4,12 +4,10 @@
  * See the LICENSE file for details.
  */
 
-import { useTheme } from "next-themes";
+import { brandMark } from "@plane/blocks/brand";
 // plane imports
 import { Button } from "@makeplane/propel/components/button";
 // assets
-import maintenanceModeDarkModeImage from "@/app/assets/instance/maintenance-mode-dark.svg?url";
-import maintenanceModeLightModeImage from "@/app/assets/instance/maintenance-mode-light.svg?url";
 // layouts
 import DefaultLayout from "@/layouts/default-layout";
 
@@ -37,23 +35,11 @@ interface ProdErrorComponentProps {
 }
 
 export function ProdErrorComponent({ onGoHome }: ProdErrorComponentProps) {
-  // hooks
-  const { resolvedTheme } = useTheme();
-
-  // derived values
-  const maintenanceModeImage = resolvedTheme === "dark" ? maintenanceModeDarkModeImage : maintenanceModeLightModeImage;
-
   return (
     <DefaultLayout>
       <div className="relative container mx-auto flex h-full w-full max-w-xl flex-col items-center justify-center gap-2 gap-y-6 bg-surface-1 px-6 text-center">
         <div className="relative w-full">
-          <img
-            src={maintenanceModeImage}
-            height="176"
-            width="288"
-            alt="ProjectSettingImg"
-            className="h-full w-full object-fill object-center"
-          />
+          <img src={brandMark} height={192} width={192} alt="SchmidbaurPM" className="mx-auto size-32 object-contain" />
         </div>
         <div className="relative mt-4 flex w-full flex-col gap-4">
           <div className="flex flex-col gap-2.5">

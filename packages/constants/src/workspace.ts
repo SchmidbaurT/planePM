@@ -269,7 +269,15 @@ export const WORKSPACE_SIDEBAR_STATIC_NAVIGATION_ITEMS: Record<string, IWorkspac
     labelTranslationKey: "projects",
     href: `/projects/`,
     access: [EUserWorkspaceRoles.ADMIN, EUserWorkspaceRoles.MEMBER, EUserWorkspaceRoles.GUEST],
-    highlight: (pathname: string, url: string) => pathname === url,
+    highlight: (pathname: string, url: string) =>
+      pathname === url || pathname.startsWith(`${url}dashboard`) || pathname.startsWith(`${url}timeline`),
+  },
+  resources: {
+    key: "resources",
+    labelTranslationKey: "planning.resources",
+    href: `/resources/`,
+    access: [EUserWorkspaceRoles.ADMIN, EUserWorkspaceRoles.MEMBER],
+    highlight: (pathname: string, url: string) => pathname.startsWith(url),
   },
 };
 
@@ -279,6 +287,7 @@ export const WORKSPACE_SIDEBAR_STATIC_NAVIGATION_ITEMS_LINKS: IWorkspaceSidebarN
 
 export const WORKSPACE_SIDEBAR_STATIC_PINNED_NAVIGATION_ITEMS_LINKS: IWorkspaceSidebarNavigationItem[] = [
   WORKSPACE_SIDEBAR_STATIC_NAVIGATION_ITEMS["projects"],
+  WORKSPACE_SIDEBAR_STATIC_NAVIGATION_ITEMS["resources"],
 ];
 
 export const IS_FAVORITE_MENU_OPEN = "is_favorite_menu_open";

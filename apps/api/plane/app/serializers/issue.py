@@ -17,6 +17,7 @@ from .user import UserLiteSerializer
 from .state import StateLiteSerializer
 from .project import ProjectLiteSerializer
 from .workspace import WorkspaceLiteSerializer
+from .resource import ResourceIssueSerializerMixin, ResourceRequirementsField
 from plane.db.models import (
     User,
     Issue,
@@ -79,7 +80,10 @@ class IssueProjectLiteSerializer(BaseSerializer):
 
 ##TODO: Find a better way to write this serializer
 ## Find a better approach to save manytomany?
-class IssueCreateSerializer(BaseSerializer):
+class IssueCreateSerializer(ResourceIssueSerializerMixin, BaseSerializer):
+    expected_updated_at = serializers.DateTimeField(required=False, write_only=True)
+    blocker_issue_ids = serializers.ListField(child=serializers.UUIDField(), required=False, write_only=True, max_length=1000)
+    resource_requirements = ResourceRequirementsField(required=False)
     # ids
     state_id = serializers.PrimaryKeyRelatedField(
         source="state", queryset=State.all_state_objects.all(), required=False, allow_null=True
@@ -111,6 +115,7 @@ class IssueCreateSerializer(BaseSerializer):
             "created_at",
             "updated_at",
             "completed_at",
+            "blocking_legacy",
         ]
 
     def to_representation(self, instance):

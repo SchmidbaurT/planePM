@@ -164,6 +164,7 @@ export class IssueRelationStore implements IIssueRelationStore {
 
     // fetching activity
     this.rootIssueDetailStore.activity.fetchActivities(workspaceSlug, projectId, issueId);
+    if (relationType === "blocked_by") await this.rootIssueDetailStore.issue.fetchIssue(workspaceSlug, projectId, issueId);
     return response;
   };
 

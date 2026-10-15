@@ -23,6 +23,7 @@ import { usePlatformOS } from "@/hooks/use-platform-os";
 import type { TProject } from "@plane/types";
 import { ProjectAttributes } from "./attributes";
 import { getProjectFormValues } from "./utils";
+import { ProjectTemplatePicker, TemplateError } from "@/components/project/templates";
 
 export type TCreateProjectFormProps = {
   setToFavorite?: boolean;
@@ -35,15 +36,21 @@ export type TCreateProjectFormProps = {
 };
 
 export const CreateProjectForm = observer(function CreateProjectForm(props: TCreateProjectFormProps) {
-  const { setToFavorite, workspaceSlug, data, onClose, handleNextStep, updateCoverImageStatus } = props;
+  const { setToFavorite, workspaceSlug, data, templateId, onClose, handleNextStep, updateCoverImageStatus } = props;
   // store
   const { t } = useTranslation();
   const { addProjectToFavorites, createProject, updateProject } = useProject();
   // states
   const [shouldAutoSyncIdentifier, setShouldAutoSyncIdentifier] = useState(true);
+  const [templateError, setTemplateError] = useState<unknown>();
   // form info
   const methods = useForm<TProject>({
-    defaultValues: { ...getProjectFormValues(), ...data },
+    defaultValues: {
+      ...getProjectFormValues(),
+      ...data,
+      template_id: templateId ?? null,
+      template_copy_assignees: false,
+    },
     reValidateMode: "onChange",
   });
   const { handleSubmit, reset, setValue } = methods;
@@ -61,6 +68,7 @@ export const CreateProjectForm = observer(function CreateProjectForm(props: TCre
   };
 
   const onSubmit = async (formData: Partial<TProject>) => {
+    setTemplateError(undefined);
     // Upper case identifier
     formData.identifier = formData.identifier?.toUpperCase();
     const coverImage = formData.cover_image_url;
@@ -113,6 +121,10 @@ export const CreateProjectForm = observer(function CreateProjectForm(props: TCre
         return handleNextStep(res.id);
       })
       .catch((err) => {
+        if (formData.template_id) {
+          setTemplateError(err);
+          return;
+        }
         try {
           // Handle the new error format where codes are nested in arrays under field names
           const errorData = err?.data ?? {};
@@ -178,6 +190,7 @@ export const CreateProjectForm = observer(function CreateProjectForm(props: TCre
 
       <form onSubmit={handleSubmit(onSubmit)} className="px-3">
         <div className="mt-9 space-y-6 pb-5">
+          <ProjectTemplatePicker workspace={workspaceSlug} />
           <ProjectCommonAttributes
             setValue={setValue}
             isMobile={isMobile}
@@ -185,6 +198,7 @@ export const CreateProjectForm = observer(function CreateProjectForm(props: TCre
             setShouldAutoSyncIdentifier={setShouldAutoSyncIdentifier}
           />
           <ProjectAttributes isMobile={isMobile} />
+          <TemplateError error={templateError} />
         </div>
         <ProjectCreateButtons handleClose={handleClose} />
       </form>

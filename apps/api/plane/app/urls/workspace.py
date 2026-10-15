@@ -3,6 +3,11 @@
 # See the LICENSE file for details.
 
 from django.urls import path
+from plane.app.views.workspace.resource import (
+    WorkspaceResourcesEndpoint, ResourceAvailabilityEndpoint, ResourceBlackoutsEndpoint,
+    IssueResourcesEndpoint, ProjectOverviewPreferencesEndpoint,
+    ResourceOverviewEndpoint,
+)
 
 
 from plane.app.views import (
@@ -40,6 +45,14 @@ from plane.app.views import (
 
 
 urlpatterns = [
+    path("workspaces/<str:slug>/resource-overview/", ResourceOverviewEndpoint.as_view()),
+    path("workspaces/<str:slug>/resources/", WorkspaceResourcesEndpoint.as_view()),
+    path("workspaces/<str:slug>/resources/<uuid:resource_id>/", WorkspaceResourcesEndpoint.as_view()),
+    path("workspaces/<str:slug>/resources/<uuid:resource_id>/availability/", ResourceAvailabilityEndpoint.as_view()),
+    path("workspaces/<str:slug>/resources/<uuid:resource_id>/blackouts/", ResourceBlackoutsEndpoint.as_view()),
+    path("workspaces/<str:slug>/resources/<uuid:resource_id>/blackouts/<uuid:blackout_id>/", ResourceBlackoutsEndpoint.as_view()),
+    path("workspaces/<str:slug>/projects/<uuid:project_id>/issues/<uuid:issue_id>/resources/", IssueResourcesEndpoint.as_view()),
+    path("workspaces/<str:slug>/project-overview-preferences/", ProjectOverviewPreferencesEndpoint.as_view()),
     path(
         "workspace-slug-check/",
         WorkSpaceAvailabilityCheckEndpoint.as_view(),

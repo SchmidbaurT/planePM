@@ -58,7 +58,7 @@ export const GanttChartSidebar = observer(function GanttChartSidebar(props: Prop
       id="gantt-sidebar"
       className="sticky left-0 z-10 h-max min-h-full flex-shrink-0 border-r-[0.5px] border-subtle-1 bg-surface-1"
       style={{
-        width: `${SIDEBAR_WIDTH}px`,
+        width: `min(${SIDEBAR_WIDTH}px, 45vw)`,
       }}
       variant={ERowVariant.HUGGING}
     >

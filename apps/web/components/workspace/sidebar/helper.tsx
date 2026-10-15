@@ -17,6 +17,7 @@ import {
   YourWorkOutline,
 } from "@makeplane/propel/icons";
 import { cn } from "@plane/utils";
+import { Wrench } from "lucide-react";
 
 export const getSidebarNavigationItemIcon = (key: string, className: string = "") => {
   switch (key) {
@@ -26,6 +27,8 @@ export const getSidebarNavigationItemIcon = (key: string, className: string = ""
       return <InboxOutline className={cn("size-4 flex-shrink-0", className)} />;
     case "projects":
       return <ProjectsOutline className={cn("size-4 flex-shrink-0", className)} />;
+    case "resources":
+      return <Wrench className={cn("size-4 flex-shrink-0", className)} />;
     case "views":
       return <ViewsOutline className={cn("size-4 flex-shrink-0", className)} />;
     case "active_cycles":

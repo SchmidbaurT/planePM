@@ -24,6 +24,7 @@ import { usePlatformOS } from "@/hooks/use-platform-os";
 // Plane web imports
 import { useTimeLineRelationOptions } from "@/components/relations";
 import type { TIssueRelationTypes } from "@plane/types";
+import { useTranslation } from "@plane/i18n";
 import type { TRelationObject } from "../issue-detail-widgets/relations";
 
 type TIssueRelationSelect = {
@@ -37,6 +38,7 @@ type TIssueRelationSelect = {
 
 export const IssueRelationSelect = observer(function IssueRelationSelect(props: TIssueRelationSelect) {
   const { className = "", workspaceSlug, projectId, issueId, relationKey, disabled = false } = props;
+  const { t } = useTranslation();
   // hooks
   const { getProjectById } = useProject();
   const {
@@ -61,15 +63,34 @@ export const IssueRelationSelect = observer(function IssueRelationSelect(props: 
       return;
     }
 
-    await createRelation(
-      workspaceSlug,
-      projectId,
-      issueId,
-      relationKey,
-      data.map((i) => i.id)
-    );
+    try {
+      await createRelation(
+        workspaceSlug,
+        projectId,
+        issueId,
+        relationKey,
+        data.map((i) => i.id)
+      );
 
-    toggleRelationModal(null, null);
+      toggleRelationModal(null, null);
+    } catch (error) {
+      const failure =
+        error && typeof error === "object"
+          ? (error as { code?: string; data?: { code?: string }; response?: { data?: { code?: string } } })
+          : {};
+      const code = String(failure.code ?? failure.data?.code ?? failure.response?.data?.code ?? "");
+      throw new Error(
+        t(
+          code === "RELATION_CYCLE"
+            ? "planning.relation_cycle"
+            : code === "RELATION_SELF"
+              ? "planning.relation_self"
+              : code === "RELATION_EXISTS"
+                ? "planning.relation_exists"
+                : "planning.error"
+        )
+      );
+    }
   };
 
   if (!relationIssueIds) return null;

@@ -7,6 +7,7 @@
 export type TStateGroups = "backlog" | "unstarted" | "started" | "completed" | "cancelled";
 
 export interface IState {
+  is_blocked?: boolean;
   readonly id: string;
   color: string;
   default: boolean;

@@ -13,6 +13,7 @@ import favicon32 from "@/app/assets/favicon/favicon-32x32.png?url";
 import faviconIco from "@/app/assets/favicon/favicon.ico?url";
 import { LogoSpinner } from "@/components/common/logo-spinner";
 import globalStyles from "@/styles/globals.css?url";
+import brandStyles from "@plane/blocks/brand/styles.css?url";
 import { AppProviders } from "@/providers";
 import type { Route } from "./+types/root";
 // fonts
@@ -21,7 +22,7 @@ import interVariableWoff2 from "@fontsource-variable/inter/files/inter-latin-wgh
 import "@fontsource/material-symbols-rounded";
 import "@fontsource/ibm-plex-mono";
 
-const APP_TITLE = "Plane | Simple, extensible, open-source project management tool.";
+const APP_TITLE = "SchmidbaurPM Admin";
 const APP_DESCRIPTION =
   "Open-source project management tool to manage work items, sprints, and product roadmaps with peace of mind.";
 
@@ -30,8 +31,9 @@ export const links: LinksFunction = () => [
   { rel: "icon", type: "image/png", sizes: "32x32", href: favicon32 },
   { rel: "icon", type: "image/png", sizes: "16x16", href: favicon16 },
   { rel: "shortcut icon", href: faviconIco },
-  { rel: "manifest", href: `/site.webmanifest.json` },
+  { rel: "manifest", href: `${import.meta.env.BASE_URL}site.webmanifest.json` },
   { rel: "stylesheet", href: globalStyles },
+  { rel: "stylesheet", href: brandStyles },
   {
     rel: "preload",
     href: interVariableWoff2,
@@ -63,13 +65,11 @@ export const meta: Route.MetaFunction = () => [
   { name: "description", content: APP_DESCRIPTION },
   { property: "og:title", content: APP_TITLE },
   { property: "og:description", content: APP_DESCRIPTION },
-  { property: "og:url", content: "https://plane.so/" },
   {
     name: "keywords",
     content:
       "software development, customer feedback, software, accelerate, code management, release management, project management, work items tracking, agile, scrum, kanban, collaboration",
   },
-  { name: "twitter:site", content: "@planepowers" },
 ];
 
 export default function Root() {

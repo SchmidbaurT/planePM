@@ -64,6 +64,8 @@ export const RelationIssueProperty = observer(function RelationIssueProperty(pro
     <div className="relative flex items-center gap-2">
       <StateSelect
         value={issue.state_id}
+        issueId={issue.id}
+        onBlockingChange={(data) => issue.project_id ? issueOperations.update(workspaceSlug, issue.project_id, issueId, data) : undefined}
         projectId={issue.project_id ?? undefined}
         onChange={handleStateChange}
         disabled={disabled}

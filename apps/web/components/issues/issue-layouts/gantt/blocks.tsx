@@ -4,7 +4,10 @@
  * See the LICENSE file for details.
  */
 
+import { createContext, useContext } from "react";
+import { ChevronDown, ChevronRight } from "lucide-react";
 import { observer } from "mobx-react";
+import { useTranslation } from "@plane/i18n";
 import { useParams } from "next/navigation";
 // plane imports
 import { Popover, PopoverContent, PopoverTrigger } from "@makeplane/propel/components/popover";
@@ -31,6 +34,12 @@ type Props = {
   issueId: string;
   isEpic?: boolean;
 };
+
+export const IssueTimelineHierarchyContext = createContext<{
+  expanded: Set<string>;
+  depths: Record<string, number>;
+  toggle: (id: string) => void;
+} | null>(null);
 
 export const IssueGanttBlock = observer(function IssueGanttBlock(props: Props) {
   const { issueId, isEpic } = props;
@@ -66,14 +75,14 @@ export const IssueGanttBlock = observer(function IssueGanttBlock(props: Props) {
           // oxlint-disable-next-line jsx_a11y/click-events-have-key-events oxlint-disable-next-line jsx_a11y/no-static-element-interactions
           <div
             id={`issue-${issueId}`}
-            className="space-between relative flex h-full w-full cursor-pointer items-center rounded-sm"
-            style={blockStyle}
+            className={`space-between relative flex h-full w-full cursor-pointer items-center rounded-sm ${stateDetails?.is_blocked ? "bg-danger-subtle text-danger-primary border-danger-strong" : ""}`}
+            style={stateDetails?.is_blocked ? { ...blockStyle, backgroundColor: undefined, borderColor: undefined, color: undefined } : blockStyle}
             onClick={handleIssuePeekOverview}
           >
             <div className="absolute top-0 left-0 h-full w-full bg-surface-1/50" />
             <div
               className="sticky w-auto flex-1 truncate overflow-hidden px-2.5 py-1 text-13 text-primary"
-              style={{ left: `${SIDEBAR_WIDTH}px` }}
+              style={{ left: `min(${SIDEBAR_WIDTH}px, 45vw)` }}
             >
               {issueDetails?.name}
             </div>
@@ -98,6 +107,8 @@ export const IssueGanttBlock = observer(function IssueGanttBlock(props: Props) {
 // rendering issues on gantt sidebar
 export const IssueGanttSidebarBlock = observer(function IssueGanttSidebarBlock(props: Props) {
   const { issueId, isEpic = false } = props;
+  const hierarchy = useContext(IssueTimelineHierarchyContext);
+  const { t } = useTranslation();
   // router
   const { workspaceSlug: routerWorkspaceSlug } = useParams();
   const workspaceSlug = routerWorkspaceSlug?.toString();
@@ -133,27 +144,43 @@ export const IssueGanttSidebarBlock = observer(function IssueGanttSidebarBlock(p
   });
 
   return (
-    <ControlLink
-      id={`issue-${issueId}`}
-      href={workItemLink}
-      onClick={handleIssuePeekOverview}
-      className="line-clamp-1 w-full cursor-pointer text-13 text-primary"
-      disabled={!!issueDetails?.tempId}
-    >
-      <div className="relative flex h-full w-full cursor-pointer items-center gap-2">
-        {issueDetails?.project_id && (
-          <IssueIdentifier
-            issueId={issueDetails.id}
-            projectId={issueDetails.project_id}
-            size="xs"
-            variant="tertiary"
-            displayProperties={issuesFilter?.issueFilters?.displayProperties}
-          />
-        )}
-        <Tooltip label={issueDetails?.name ?? ""} layout="stacked" disabled={isMobile}>
-          <span className="flex-grow truncate text-13 font-medium">{issueDetails?.name}</span>
-        </Tooltip>
-      </div>
-    </ControlLink>
+    <div className="flex min-w-0 items-center gap-1" style={{ paddingLeft: (hierarchy?.depths[issueId] ?? 0) * 16 }}>
+      {hierarchy && !isEpic && (issueDetails?.sub_issues_count ?? 0) > 0 ? (
+        <button
+          type="button"
+          className="flex size-6 shrink-0 items-center justify-center rounded-sm hover:bg-layer-1"
+          aria-label={t("common.sub_work_items")}
+          title={t("common.sub_work_items")}
+          aria-expanded={hierarchy.expanded.has(issueId)}
+          onClick={() => hierarchy.toggle(issueId)}
+        >
+          {hierarchy.expanded.has(issueId) ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+        </button>
+      ) : hierarchy ? (
+        <span className="size-6 shrink-0" />
+      ) : null}
+      <ControlLink
+        id={`issue-${issueId}`}
+        href={workItemLink}
+        onClick={handleIssuePeekOverview}
+        className="line-clamp-1 w-full cursor-pointer text-13 text-primary"
+        disabled={!!issueDetails?.tempId}
+      >
+        <div className="relative flex h-full w-full cursor-pointer items-center gap-2">
+          {issueDetails?.project_id && (
+            <IssueIdentifier
+              issueId={issueDetails.id}
+              projectId={issueDetails.project_id}
+              size="xs"
+              variant="tertiary"
+              displayProperties={issuesFilter?.issueFilters?.displayProperties}
+            />
+          )}
+          <Tooltip label={issueDetails?.name ?? ""} layout="stacked" disabled={isMobile}>
+            <span className="flex-grow truncate text-13 font-medium">{issueDetails?.name}</span>
+          </Tooltip>
+        </div>
+      </ControlLink>
+    </div>
   );
 });

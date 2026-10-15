@@ -16,6 +16,20 @@ def django_db_setup(django_db_setup):  # noqa: F811
     pass
 
 
+@pytest.fixture(scope="session")
+def resource_database_guard(django_db_setup, django_db_blocker):
+    from importlib import import_module
+    from django.db import connection
+
+    with django_db_blocker.unblock(), connection.cursor() as cursor:
+        cursor.execute("SELECT to_regprocedure('resource_validate_workspace(uuid)')")
+        if cursor.fetchone()[0] is None:
+            cursor.execute(import_module("plane.db.migrations.0124_resource_capacity_guard").SQL)
+        cursor.execute("SELECT to_regprocedure('resource_issue_project_sync()')")
+        if cursor.fetchone()[0] is None:
+            cursor.execute(import_module("plane.db.migrations.0125_resource_project_move").SQL)
+
+
 @pytest.fixture
 def api_client():
     """Return an unauthenticated API client"""

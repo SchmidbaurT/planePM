@@ -25,23 +25,26 @@ from plane.db.models import (
 from plane.utils.content_validator import (
     validate_html_content,
 )
+from plane.utils.project_templates import available_templates, instantiate_project_template
+from rest_framework.exceptions import PermissionDenied
 
 
 class ProjectSerializer(BaseSerializer):
+    template_id = serializers.UUIDField(required=False, allow_null=True, write_only=True)
+    template_start_date = serializers.DateField(required=False, allow_null=True, write_only=True)
+    template_copy_assignees = serializers.BooleanField(required=False, default=False, write_only=True)
+    template_milestone_owner_id = serializers.UUIDField(required=False, allow_null=True, write_only=True)
     workspace_detail = WorkspaceLiteSerializer(source="workspace", read_only=True)
     inbox_view = serializers.BooleanField(read_only=True, source="intake_view")
 
     class Meta:
         model = Project
         fields = "__all__"
-        read_only_fields = ["workspace", "deleted_at"]
+        read_only_fields = ["id", "workspace", "deleted_at", "blocked_release_state"]
 
     def validate_name(self, name):
         project_id = self.instance.id if self.instance else None
         workspace_id = self.context["workspace_id"]
-
-        if re.match(Project.FORBIDDEN_IDENTIFIER_CHARS_PATTERN, name):
-            raise serializers.ValidationError(detail="PROJECT_NAME_CANNOT_CONTAIN_SPECIAL_CHARACTERS")
 
         project = Project.objects.filter(name=name, workspace_id=workspace_id)
 
@@ -75,6 +78,13 @@ class ProjectSerializer(BaseSerializer):
         return identifier
 
     def validate(self, data):
+        if self.instance and {
+            "template_id",
+            "template_start_date",
+            "template_copy_assignees",
+            "template_milestone_owner_id",
+        }.intersection(data):
+            raise serializers.ValidationError("Templates can only be applied when creating a project.")
         # Validate description content for security
         if "description_html" in data and data["description_html"]:
             is_valid, error_msg, sanitized_html = validate_html_content(str(data["description_html"]))
@@ -89,6 +99,22 @@ class ProjectSerializer(BaseSerializer):
 
     def create(self, validated_data):
         workspace_id = self.context["workspace_id"]
+        template_id = validated_data.pop("template_id", None)
+        start = validated_data.pop("template_start_date", None)
+        copy_assignees = validated_data.pop("template_copy_assignees", False)
+        milestone_owner_id = validated_data.pop("template_milestone_owner_id", None)
+        if template_id:
+            from django.shortcuts import get_object_or_404
+            from plane.db.models import Workspace
+
+            request = self.context.get("request")
+            if request is None:
+                raise PermissionDenied()
+            workspace = Workspace.objects.get(pk=workspace_id)
+            template = get_object_or_404(available_templates(workspace, request.user), pk=template_id)
+            return instantiate_project_template(
+                template, request.user, validated_data, start, copy_assignees, milestone_owner_id
+            )
 
         project = Project.objects.create(**validated_data, workspace_id=workspace_id)
 

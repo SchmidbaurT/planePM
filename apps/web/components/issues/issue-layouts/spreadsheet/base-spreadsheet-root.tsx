@@ -80,7 +80,7 @@ export const BaseSpreadsheetRoot = observer(function BaseSpreadsheetRoot(props: 
     [canEditPropertiesBasedOnProject, enableInlineEditing, isEditingAllowed]
   );
 
-  const issueIds = issues.groupedIssueIds?.[ALL_ISSUES] ?? [];
+  const issueIds = isEpic ? issues.groupedIssueIds?.[ALL_ISSUES] ?? [] : issues.getIssueIds() ?? [];
   const nextPageResults = issues.getPaginationData(ALL_ISSUES, undefined)?.nextPageResults;
 
   const handleDisplayFiltersUpdate = useCallback(

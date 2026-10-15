@@ -16,6 +16,7 @@ import { useOutsideClickDetector } from "@plane/hooks";
 import { Tooltip } from "@makeplane/propel/components/tooltip";
 import type { IIssueDisplayProperties, TIssue } from "@plane/types";
 import { EIssueServiceType } from "@plane/types";
+import { useTranslation } from "@plane/i18n";
 // ui
 import { ControlLink, Row } from "@plane/blocks/layout";
 import { cn, generateWorkItemLink } from "@plane/utils";
@@ -25,6 +26,7 @@ import RenderIfVisible from "@/components/core/render-if-visible-HOC";
 import { IssueIdentifier } from "@/components/issues/issue-detail/issue-identifier";
 // hooks
 import { useIssueDetail } from "@/hooks/store/use-issue-detail";
+import { useIssueBlocked } from "@/hooks/store/use-issue-blocked";
 import { useIssues } from "@/hooks/store/use-issues";
 import { useProject } from "@/hooks/store/use-project";
 import useIssuePeekOverviewRedirection from "@/hooks/use-issue-peek-overview-redirection";
@@ -51,6 +53,7 @@ interface Props {
   selectionHelpers: TSelectionHelper;
   shouldRenderByDefault?: boolean;
   isEpic?: boolean;
+  ancestorIds?: string[];
 }
 
 export const SpreadsheetIssueRow = observer(function SpreadsheetIssueRow(props: Props) {
@@ -70,6 +73,7 @@ export const SpreadsheetIssueRow = observer(function SpreadsheetIssueRow(props: 
     selectionHelpers,
     shouldRenderByDefault,
     isEpic = false,
+    ancestorIds = [],
   } = props;
   // states
   const [isExpanded, setExpanded] = useState<boolean>(false);
@@ -79,7 +83,9 @@ export const SpreadsheetIssueRow = observer(function SpreadsheetIssueRow(props: 
 
   // derived values
   const issue = issueMap[issueId];
+  const isBlocked = useIssueBlocked(issueId);
   const subIssues = subIssuesStore.subIssuesByIssueId(issueId);
+  const ancestors = new Set([...ancestorIds, issueId]);
   const isIssueSelected = selectionHelpers.getIsEntitySelected(issueId);
   const isIssueActive = selectionHelpers.getIsEntityActive(issueId);
 
@@ -99,6 +105,7 @@ export const SpreadsheetIssueRow = observer(function SpreadsheetIssueRow(props: 
           />
         }
         classNames={cn("bg-surface-1 transition-[background-color]", {
+          "bg-danger-subtle": isBlocked,
           "group selected-issue-row": isIssueSelected,
           "border-[0.5px] border-strong-1": isIssueActive,
         })}
@@ -127,25 +134,28 @@ export const SpreadsheetIssueRow = observer(function SpreadsheetIssueRow(props: 
 
       {isExpanded &&
         !isEpic &&
-        subIssues?.map((subIssueId: string) => (
-          <SpreadsheetIssueRow
-            key={subIssueId}
-            issueId={subIssueId}
-            displayProperties={displayProperties}
-            quickActions={quickActions}
-            canEditProperties={canEditProperties}
-            nestingLevel={nestingLevel + 1}
-            spacingLeft={spacingLeft + 12}
-            isEstimateEnabled={isEstimateEnabled}
-            updateIssue={updateIssue}
-            portalElement={portalElement}
-            isScrolled={isScrolled}
-            containerRef={containerRef}
-            spreadsheetColumnsList={spreadsheetColumnsList}
-            selectionHelpers={selectionHelpers}
-            shouldRenderByDefault={isExpanded}
-          />
-        ))}
+        subIssues
+          ?.filter((id) => !ancestors.has(id))
+          .map((subIssueId: string) => (
+            <SpreadsheetIssueRow
+              key={subIssueId}
+              issueId={subIssueId}
+              displayProperties={displayProperties}
+              quickActions={quickActions}
+              canEditProperties={canEditProperties}
+              nestingLevel={nestingLevel + 1}
+              spacingLeft={spacingLeft + 12}
+              isEstimateEnabled={isEstimateEnabled}
+              updateIssue={updateIssue}
+              portalElement={portalElement}
+              isScrolled={isScrolled}
+              containerRef={containerRef}
+              spreadsheetColumnsList={spreadsheetColumnsList}
+              selectionHelpers={selectionHelpers}
+              shouldRenderByDefault={isExpanded}
+              ancestorIds={[...ancestorIds, issueId]}
+            />
+          ))}
     </>
   );
 });
@@ -188,6 +198,7 @@ const IssueRowDetails = observer(function IssueRowDetails(props: IssueRowDetails
   } = props;
   // states
   const [isMenuActive, setIsMenuActive] = useState(false);
+  const { t } = useTranslation();
   // refs
   const cellRef = useRef(null);
   const menuActionRef = useRef<HTMLButtonElement | null>(null);
@@ -341,6 +352,9 @@ const IssueRowDetails = observer(function IssueRowDetails(props: IssueRowDetails
                     type="button"
                     className="grid size-4 place-items-center rounded-xs text-placeholder hover:text-tertiary"
                     onClick={handleToggleExpand}
+                    aria-expanded={isExpanded}
+                    aria-label={`${t("common.sub_work_items")}: ${issueDetail.name}`}
+                    title={t("common.sub_work_items")}
                   >
                     <ChevronRightOutline
                       className={cn("size-4", {

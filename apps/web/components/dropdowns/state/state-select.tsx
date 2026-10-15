@@ -5,7 +5,7 @@
  */
 
 import type { ReactNode } from "react";
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
 // plane imports
@@ -13,13 +13,17 @@ import { StateSelect as StateSelectBlock } from "@plane/blocks/property-select";
 import type { StateOption } from "@plane/blocks/property-select";
 import type { SelectPaginationParams, SelectTooltip, SelectTooltipOverride, SelectVariant } from "@plane/blocks/select";
 import { useTranslation } from "@plane/i18n";
-import type { IState, TPaginatedResponse } from "@plane/types";
+import type { IState, TIssue, TPaginatedResponse } from "@plane/types";
+import { setToast } from "@plane/blocks/toast";
+import { BlockingDialog } from "./blocking-dialog";
 // hooks
 import { useProjectState } from "@/hooks/store/use-project-state";
 
 type StateSelectWebProps = {
   /** Project whose states are offered. */
   projectId: string | undefined;
+    issueId?: string;
+    onBlockingChange?: (data: Partial<TIssue>) => Promise<void> | void;
   /** Current state id (`null` / `undefined` when none). */
   value: string | null | undefined;
   /** Emits the next state id. */
@@ -68,7 +72,10 @@ export const StateSelect = observer(function StateSelect(props: StateSelectWebPr
     appendElement,
     testId,
     tabIndex,
+    issueId,
+    onBlockingChange,
   } = props;
+  const [blockingOpen, setBlockingOpen] = useState(false);
   // router params
   const { workspaceSlug } = useParams();
   // store hooks
@@ -95,32 +102,40 @@ export const StateSelect = observer(function StateSelect(props: StateSelectWebPr
       const query = search?.trim().toLowerCase();
       const results = (stateIds ?? [])
         .map((stateId) => getStateById(stateId))
-        .filter((state): state is IState => !!state)
+        .filter((state): state is IState => !!state && (!state.is_blocked || !!onBlockingChange || state.id === value))
         .filter((state) => !query || state.name.toLowerCase().includes(query))
-        .map(toOption);
+        .map((state) => ({ ...toOption(state), name: state.is_blocked ? t("planning.blocked_state") : state.name }));
       return { results, next_page_results: false };
     },
-    [workspaceSlug, projectId, getProjectStateIds, fetchProjectStates, getStateById]
+    [workspaceSlug, projectId, getProjectStateIds, fetchProjectStates, getStateById, onBlockingChange, value, t]
   );
 
   // Resolved in the observer render (not in a memo) so MobX re-renders when the state loads.
   const selectedState = value ? getStateById(value) : undefined;
-  const selected = selectedState ? toOption(selectedState) : null;
+  const selected = selectedState ? { ...toOption(selectedState), name: selectedState.is_blocked ? t("planning.blocked_state") : selectedState.name } : null;
 
   return (
+    <>
     <StateSelectBlock
+            onChange={(id) => {
+              const next = getStateById(id);
+              if (next?.is_blocked && onBlockingChange) { setBlockingOpen(true); return; }
+              if (selectedState?.is_blocked && next?.group !== "cancelled") { setToast({ type: "error", title: t("toast.error"), message: t("planning.blocking_active") }); return; }
+              onChange(id);
+            }}
       getValues={getValues}
       value={selected}
-      onChange={onChange}
       variant={variant}
       disabled={disabled}
       placeholder={placeholder ?? t("state")}
       onClose={onClose}
-      className={className}
+      className={[className, selectedState?.is_blocked ? "bg-danger-subtle text-danger-primary" : ""].filter(Boolean).join(" ")}
       tooltip={resolvedTooltip}
       appendElement={appendElement}
       testId={testId}
       tabIndex={tabIndex}
     />
+    {blockingOpen && projectId && workspaceSlug && onBlockingChange && <BlockingDialog workspace={workspaceSlug.toString()} project={projectId} issueId={issueId} allowClear={!!selectedState?.is_blocked} close={() => setBlockingOpen(false)} save={async (ids, version) => { const blocked = (getProjectStateIds(projectId) ?? []).map((id) => getStateById(id)).find((state) => state?.is_blocked); await onBlockingChange({ blocker_issue_ids: ids, state_id: blocked?.id, expected_updated_at: version }); }} />}
+    </>
   );
 });

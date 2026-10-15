@@ -212,6 +212,8 @@ export const IssueProperties = observer(function IssueProperties(props: IIssuePr
         <div className="h-5" onFocus={handleEventPropagation} onClick={handleEventPropagation}>
           <StateSelect
             value={issue.state_id}
+            issueId={issue.id}
+            onBlockingChange={updateIssue ? (data) => updateIssue(issue.project_id, issue.id, data) : undefined}
             onChange={handleState}
             projectId={issue.project_id}
             disabled={isReadOnly}

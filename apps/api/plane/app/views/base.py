@@ -29,6 +29,7 @@ from plane.authentication.session import BaseSessionAuthentication
 from plane.utils.exception_logger import log_exception
 from plane.utils.paginator import BasePaginator
 from plane.utils.core.mixins import ReadReplicaControlMixin
+from plane.utils.resource_booking import resource_error_response
 
 
 class TimezoneMixin:
@@ -72,6 +73,9 @@ class BaseViewSet(TimezoneMixin, ReadReplicaControlMixin, ModelViewSet, BasePagi
         Handle any exception that occurs, by returning an appropriate response,
         or re-raising the error.
         """
+        resource_response = resource_error_response(exc)
+        if resource_response is not None:
+            return resource_response
         try:
             response = super().handle_exception(exc)
             return response
@@ -169,6 +173,9 @@ class BaseAPIView(TimezoneMixin, ReadReplicaControlMixin, APIView, BasePaginator
         Handle any exception that occurs, by returning an appropriate response,
         or re-raising the error.
         """
+        resource_response = resource_error_response(exc)
+        if resource_response is not None:
+            return resource_response
         try:
             response = super().handle_exception(exc)
             return response

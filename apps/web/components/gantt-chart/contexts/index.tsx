@@ -8,6 +8,11 @@ import { createContext, useContext } from "react";
 import type { TTimelineType } from "@plane/types";
 
 export const TimeLineTypeContext = createContext<TTimelineType | undefined>(undefined);
+export const TimelineDependencyViewContext = createContext<{
+  mode: "all" | "focus" | "conflicts";
+  focusId: string;
+  setFocusId: (id: string) => void;
+}>({ mode: "all", focusId: "", setFocusId: () => undefined });
 
 export const useTimeLineType = () => {
   const timelineType = useContext(TimeLineTypeContext);

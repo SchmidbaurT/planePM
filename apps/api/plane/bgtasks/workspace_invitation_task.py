@@ -14,6 +14,7 @@ from django.template.loader import render_to_string
 
 # Module imports
 from plane.db.models import User, Workspace, WorkspaceMemberInvite
+from plane.utils.branding import APP_NAME
 from plane.license.utils.instance_value import get_email_configuration
 from plane.utils.email import generate_plain_text_from_html
 from plane.utils.exception_logger import log_exception
@@ -46,7 +47,7 @@ def workspace_invitation(email, workspace_id, token, current_site, inviter):
         ) = get_email_configuration()
 
         # Subject of the email
-        subject = f"{user.first_name or user.display_name or user.email} has invited you to join them in {workspace.name} on Plane"  # noqa: E501
+        subject = f"{user.first_name or user.display_name or user.email} has invited you to join them in {workspace.name} on {APP_NAME}"  # noqa: E501
 
         context = {
             "email": email,

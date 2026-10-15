@@ -32,6 +32,7 @@ import { usePlatformOS } from "@/hooks/use-platform-os";
 // plane web imports
 import { CommonProjectBreadcrumbs } from "@/components/breadcrumbs/common";
 import { useProjectCrumbProps } from "@/components/breadcrumbs/use-project-crumb-props";
+import { MilestoneManager } from "@/components/project/milestones";
 
 export const IssuesHeader = observer(function IssuesHeader() {
   // router
@@ -110,6 +111,9 @@ export const IssuesHeader = observer(function IssuesHeader() {
         )}
       </Header.LeftItem>
       <Header.RightItem>
+        {workspaceSlug && projectId && canUserCreateIssue && (
+          <MilestoneManager workspace={workspaceSlug.toString()} project={projectId.toString()} />
+        )}
         <div className="hidden gap-2 md:flex">
           <HeaderFilters
             projectId={projectId}

@@ -41,9 +41,11 @@ from .user import UserLiteSerializer
 # Django imports
 from django.core.exceptions import ValidationError
 from django.core.validators import URLValidator
+from plane.app.serializers.resource import ResourceIssueSerializerMixin, ResourceRequirementsField
 
 
-class IssueSerializer(BaseSerializer):
+class IssueSerializer(ResourceIssueSerializerMixin, BaseSerializer):
+    expected_updated_at = serializers.DateTimeField(required=False, write_only=True)
     """
     Comprehensive work item serializer with full relationship management.
 
@@ -52,6 +54,8 @@ class IssueSerializer(BaseSerializer):
     processing.
     """
 
+    blocker_issue_ids = serializers.ListField(child=serializers.UUIDField(), required=False, write_only=True, max_length=1000)
+    resource_requirements = ResourceRequirementsField(required=False)
     assignees = serializers.ListField(
         child=serializers.PrimaryKeyRelatedField(queryset=User.objects.values_list("id", flat=True)),
         write_only=True,
@@ -69,7 +73,7 @@ class IssueSerializer(BaseSerializer):
 
     class Meta:
         model = Issue
-        read_only_fields = ["id", "workspace", "project", "updated_by", "updated_at", "completed_at"]
+        read_only_fields = ["id", "workspace", "project", "updated_by", "updated_at", "completed_at", "blocking_legacy"]
         exclude = ["description_json", "description_stripped"]
 
     def validate(self, data):

@@ -4,10 +4,12 @@
 
 # Python imports
 import json
+from functools import partial
 
 
 # Django imports
 from django.core.serializers.json import DjangoJSONEncoder
+from django.db import transaction
 from django.db.models import Exists, F, OuterRef, Prefetch, Q, Subquery, Count
 from django.utils import timezone
 
@@ -255,10 +257,13 @@ class ProjectViewSet(BaseViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER], level="WORKSPACE")
+    @transaction.atomic
     def create(self, request, slug):
         workspace = Workspace.objects.get(slug=slug)
 
-        serializer = ProjectSerializer(data={**request.data}, context={"workspace_id": workspace.id})
+        serializer = ProjectSerializer(
+            data={**request.data}, context={"workspace_id": workspace.id, "request": request}
+        )
         if serializer.is_valid():
             serializer.save()
 
@@ -278,38 +283,42 @@ class ProjectViewSet(BaseViewSet):
                     role=ROLE.ADMIN.value,
                 )
 
-            State.objects.bulk_create(
-                [
-                    State(
-                        name=state["name"],
-                        color=state["color"],
-                        project=serializer.instance,
-                        sequence=state["sequence"],
-                        workspace=serializer.instance.workspace,
-                        group=state["group"],
-                        default=state.get("default", False),
-                        created_by=request.user,
-                    )
-                    for state in DEFAULT_STATES
-                ]
-            )
+            if not State.objects.filter(project=serializer.instance).exists():
+                self.create_default_states(serializer.instance, request.user)
 
             project = self.get_queryset().filter(pk=serializer.data["id"]).first()
-
-            # Create the model activity
-            model_activity.delay(
-                model_name="project",
-                model_id=str(project.id),
-                requested_data=request.data,
-                current_instance=None,
-                actor_id=request.user.id,
-                slug=slug,
-                origin=base_host(request=request, is_app=True),
+            transaction.on_commit(
+                partial(
+                    model_activity.delay,
+                    model_name="project",
+                    model_id=str(project.id),
+                    requested_data=request.data,
+                    current_instance=None,
+                    actor_id=request.user.id,
+                    slug=slug,
+                    origin=base_host(request=request, is_app=True),
+                )
             )
-
             serializer = ProjectListSerializer(project)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def create_default_states(self, project, user):
+        State.objects.bulk_create(
+            [
+                State(
+                    name=state["name"],
+                    color=state["color"],
+                    project=project,
+                    sequence=state["sequence"],
+                    workspace=project.workspace,
+                    group=state["group"],
+                    default=state.get("default", False),
+                    created_by=user,
+                )
+                for state in DEFAULT_STATES
+            ]
+        )
 
     def partial_update(self, request, slug, pk=None):
         # try:

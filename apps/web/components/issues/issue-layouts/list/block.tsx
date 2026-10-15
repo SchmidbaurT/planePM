@@ -16,6 +16,7 @@ import { setToast } from "@plane/blocks/toast";
 import { Tooltip } from "@makeplane/propel/components/tooltip";
 import type { TIssue, IIssueDisplayProperties, TIssueMap } from "@plane/types";
 import { EIssueServiceType } from "@plane/types";
+import { useTranslation } from "@plane/i18n";
 // ui
 import { ControlLink, Row } from "@plane/blocks/layout";
 import { Spinner } from "@plane/blocks/spinner";
@@ -53,6 +54,7 @@ interface IssueBlockProps {
 }
 
 export const IssueBlock = observer(function IssueBlock(props: IssueBlockProps) {
+  const { t } = useTranslation();
   const {
     issuesMap,
     issueId,
@@ -250,6 +252,9 @@ export const IssueBlock = observer(function IssueBlock(props: IssueBlockProps) {
                     type="button"
                     className="grid size-4 place-items-center rounded-xs text-placeholder hover:text-tertiary"
                     onClick={handleToggleExpand}
+                    aria-expanded={isExpanded}
+                    aria-label={`${t("common.sub_work_items")}: ${issue.name}`}
+                    title={t("common.sub_work_items")}
                   >
                     <ChevronRightOutline
                       className={cn("size-4", {

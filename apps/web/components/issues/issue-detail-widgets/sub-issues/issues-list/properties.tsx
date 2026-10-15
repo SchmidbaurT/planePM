@@ -97,6 +97,8 @@ export const SubIssuesListItemProperties = observer(function SubIssuesListItemPr
       <WithDisplayPropertiesHOC displayProperties={displayProperties} displayPropertyKey="state">
         <StateSelect
           value={issue.state_id}
+          issueId={issue.id}
+          onBlockingChange={(data) => issue.project_id ? updateSubIssue(workspaceSlug, issue.project_id, parentIssueId, issueId, data, { ...issue }) : undefined}
           projectId={issue.project_id ?? undefined}
           onChange={(val) =>
             issue.project_id &&

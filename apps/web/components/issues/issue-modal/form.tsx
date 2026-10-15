@@ -52,6 +52,8 @@ import { useProjectState } from "@/hooks/store/use-project-state";
 import { useWorkspaceDraftIssues } from "@/hooks/store/workspace-draft";
 import { usePlatformOS } from "@/hooks/use-platform-os";
 import { useProjectIssueProperties } from "@/hooks/use-project-issue-properties";
+import { IssueResourceFormField } from "@/components/resources/issue-resources";
+import { PlanningError } from "@/components/resources/error";
 
 export interface IssueFormProps {
   data?: Partial<TIssue>;
@@ -105,6 +107,7 @@ export const IssueFormRoot = observer(function IssueFormRoot(props: IssueFormPro
   // states
   const [gptAssistantModal, setGptAssistantModal] = useState(false);
   const [isMoving, setIsMoving] = useState<boolean>(false);
+  const [planningError, setPlanningError] = useState<unknown>();
 
   // refs
   const editorRef = useRef<EditorRefApi>(null);
@@ -243,6 +246,7 @@ export const IssueFormRoot = observer(function IssueFormRoot(props: IssueFormPro
     // this condition helps to move the issues from draft to project issues
     if (formData.hasOwnProperty("is_draft")) submitData.is_draft = formData.is_draft;
 
+    setPlanningError(undefined);
     await onSubmit(submitData, is_draft_issue)
       .then(() => {
         setGptAssistantModal(false);
@@ -264,6 +268,7 @@ export const IssueFormRoot = observer(function IssueFormRoot(props: IssueFormPro
         }
       })
       .catch((error) => {
+        setPlanningError(error);
         console.error(error);
       });
   };
@@ -413,6 +418,8 @@ export const IssueFormRoot = observer(function IssueFormRoot(props: IssueFormPro
               />
             </DialogBody>
             <div className="shrink-0">
+              {!isDraft && projectId && <IssueResourceFormField workspace={workspaceSlug?.toString() ?? ""} projectId={projectId} disabled={isDisabled} />}
+              {!!planningError && <div className="px-6 pb-3"><PlanningError error={planningError} /></div>}
               <IssueDefaultProperties
                 control={control}
                 id={data?.id}

@@ -1,9 +1,10 @@
+{% load branding %}{% brand_name as app_name %}{% brand_logo_url as app_logo_url %}
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Your Plane Analytics export is ready</title>
+    <title>Your {{ app_name }} Analytics export is ready</title>
 
     <style>
       /* Basic resets for email clients */
@@ -73,7 +74,7 @@
         visibility: hidden;
       "
     >
-      Your requested Plane Analytics data export is attached as a CSV file.
+      Your requested {{ app_name }} Analytics data export is attached as a CSV file.
     </span>
 
     <!-- Outer Wrapper -->
@@ -90,15 +91,10 @@
             width="620"
             style="width: 620px; max-width: 620px; margin: 0 auto;"
           >
-            <table role="presentation" width="100%" style="background-color: #000000;">
+            <table role="presentation" width="100%" style="background-color: #ffffff;">
               <tr>
                 <td style="padding: 24px 40px; text-align: center;">
-                  <img
-                    src="https://media.docs.plane.so/logo/new-logo-dark.png"
-                    width="120"
-                    alt="Plane"
-                    style="height: auto; display: block; margin: 0 auto;"
-                  />
+                  <img src="{{ app_logo_url }}" width="180" alt="{{ app_name }}" style="display: block; width: 180px; max-width: 100%; height: auto; margin: 0 auto;" />
                 </td>
               </tr>
             </table>
@@ -145,12 +141,12 @@
                       color: #111111;
                     "
                   >
-                    Your Plane Analytics export is ready
+                    Your {{ app_name }} Analytics export is ready
                   </h1>
 
                   <!-- Body copy -->
                   <p style="margin: 0 0 16px;">
-                    Your requested data export from Plane Analytics is ready. We’ve attached it as a CSV file for your convenience.
+                    Your requested data export from {{ app_name }} Analytics is ready. We’ve attached it as a CSV file for your convenience.
                   </p>
 
                   <!-- Small-note styled paragraphs -->
@@ -199,7 +195,7 @@
                   "
                 >
                   <p style="margin: 0;">
-                    Plane Software, Inc.
+                    {{ app_name }}
                   </p>
                 </td>
               </tr>

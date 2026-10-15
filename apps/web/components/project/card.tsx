@@ -8,6 +8,8 @@ import React, { useRef, useState } from "react";
 import { observer } from "mobx-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { BookCopy } from "lucide-react";
+import { useTranslation } from "@plane/i18n";
 import {
   DeleteOutline,
   LinkOutline,
@@ -46,6 +48,7 @@ import { CoverImage } from "@/components/common/cover-image";
 import { DeleteProjectModal } from "./delete-project-modal";
 import { JoinProjectModal } from "./join-project-modal";
 import { ArchiveRestoreProjectModal } from "./archive-restore-modal";
+import { SaveProjectTemplateModal } from "./templates";
 
 type Props = {
   project: IProject;
@@ -53,10 +56,12 @@ type Props = {
 
 export const ProjectCard = observer(function ProjectCard(props: Props) {
   const { project } = props;
+  const { t } = useTranslation();
   // states
   const [deleteProjectModalOpen, setDeleteProjectModal] = useState(false);
   const [joinProjectModalOpen, setJoinProjectModal] = useState(false);
   const [restoreProject, setRestoreProject] = useState(false);
+  const [saveTemplate, setSaveTemplate] = useState(false);
   // refs
   const projectCardRef = useRef(null);
   // router
@@ -142,6 +147,13 @@ export const ProjectCard = observer(function ProjectCard(props: Props) {
 
   const MENU_ITEMS: TContextMenuItem[] = [
     {
+      key: "save-template",
+      action: () => setSaveTemplate(true),
+      title: t("planning.save_template"),
+      icon: BookCopy,
+      shouldRender: !isArchived && hasAdminRole && shouldRenderFavorite,
+    },
+    {
       key: "settings",
       action: () => router.push(`/${workspaceSlug}/settings/projects/${project.id}`),
       title: "Settings",
@@ -187,6 +199,13 @@ export const ProjectCard = observer(function ProjectCard(props: Props) {
 
   return (
     <>
+      {saveTemplate && workspaceSlug && (
+        <SaveProjectTemplateModal
+          workspace={workspaceSlug.toString()}
+          project={project}
+          close={() => setSaveTemplate(false)}
+        />
+      )}
       {/* Delete Project Modal */}
       <DeleteProjectModal
         project={project}

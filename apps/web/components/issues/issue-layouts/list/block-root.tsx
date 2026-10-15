@@ -21,6 +21,7 @@ import RenderIfVisible from "@/components/core/render-if-visible-HOC";
 import { ListLoaderItemRow } from "@/components/ui/loader/layouts/list-layout-loader";
 // hooks
 import { useIssueDetail } from "@/hooks/store/use-issue-detail";
+import { useIssueBlocked } from "@/hooks/store/use-issue-blocked";
 import type { TSelectionHelper } from "@/hooks/use-multiple-select";
 import { usePlatformOS } from "@/hooks/use-platform-os";
 // types
@@ -46,6 +47,7 @@ type Props = {
   isLastChild?: boolean;
   shouldRenderByDefault?: boolean;
   isEpic?: boolean;
+  ancestorIds?: string[];
 };
 
 export const IssueBlockRoot = observer(function IssueBlockRoot(props: Props) {
@@ -67,6 +69,7 @@ export const IssueBlockRoot = observer(function IssueBlockRoot(props: Props) {
     selectionHelpers,
     shouldRenderByDefault,
     isEpic = false,
+    ancestorIds = [],
   } = props;
   // states
   const [isExpanded, setExpanded] = useState<boolean>(false);
@@ -80,6 +83,7 @@ export const IssueBlockRoot = observer(function IssueBlockRoot(props: Props) {
   const { subIssues: subIssuesStore } = useIssueDetail(isEpic ? EIssueServiceType.EPICS : EIssueServiceType.ISSUES);
 
   const isSubIssue = nestingLevel !== 0;
+  const isBlocked = useIssueBlocked(issueId);
 
   useEffect(() => {
     const blockElement = issueBlockRef.current;
@@ -130,13 +134,14 @@ export const IssueBlockRoot = observer(function IssueBlockRoot(props: Props) {
   if (!issueId || !issuesMap[issueId]?.created_at) return null;
 
   const subIssues = subIssuesStore.subIssuesByIssueId(issueId);
+  const ancestors = new Set([...ancestorIds, issueId]);
   return (
     <div className="relative" ref={issueBlockRef} id={getIssueBlockId(issueId, groupId)}>
       <DropIndicator classNames={"absolute top-0 z-[2]"} isVisible={instruction === "DRAG_OVER"} />
       <RenderIfVisible
         key={`${issueId}`}
         root={containerRef}
-        classNames={`relative ${isLastChild && !isExpanded ? "" : "border-b border-b-subtle"}`}
+        classNames={`relative ${isBlocked ? "bg-danger-subtle" : ""} ${isLastChild && !isExpanded ? "" : "border-b border-b-subtle"}`}
         verticalOffset={100}
         defaultValue={shouldRenderByDefault || (issuesMap[issueId] ? isIssueNew(issuesMap[issueId]) : false)}
         placeholderChildren={<ListLoaderItemRow shouldAnimate={false} renderForPlaceHolder defaultPropertyCount={4} />}
@@ -164,26 +169,29 @@ export const IssueBlockRoot = observer(function IssueBlockRoot(props: Props) {
 
       {isExpanded &&
         !isEpic &&
-        subIssues?.map((subIssueId) => (
-          <IssueBlockRoot
-            key={`${subIssueId}`}
-            issueId={subIssueId}
-            issuesMap={issuesMap}
-            updateIssue={updateIssue}
-            quickActions={quickActions}
-            canEditProperties={canEditProperties}
-            displayProperties={displayProperties}
-            nestingLevel={nestingLevel + 1}
-            spacingLeft={spacingLeft + 12}
-            containerRef={containerRef}
-            selectionHelpers={selectionHelpers}
-            groupId={groupId}
-            isDragAllowed={isDragAllowed}
-            canDropOverIssue={canDropOverIssue}
-            isParentIssueBeingDragged={isParentIssueBeingDragged || isCurrentBlockDragging}
-            shouldRenderByDefault={isExpanded}
-          />
-        ))}
+        subIssues
+          ?.filter((id) => !ancestors.has(id))
+          .map((subIssueId) => (
+            <IssueBlockRoot
+              key={`${subIssueId}`}
+              issueId={subIssueId}
+              issuesMap={issuesMap}
+              updateIssue={updateIssue}
+              quickActions={quickActions}
+              canEditProperties={canEditProperties}
+              displayProperties={displayProperties}
+              nestingLevel={nestingLevel + 1}
+              spacingLeft={spacingLeft + 12}
+              containerRef={containerRef}
+              selectionHelpers={selectionHelpers}
+              groupId={groupId}
+              isDragAllowed={isDragAllowed}
+              canDropOverIssue={canDropOverIssue}
+              isParentIssueBeingDragged={isParentIssueBeingDragged || isCurrentBlockDragging}
+              shouldRenderByDefault={isExpanded}
+              ancestorIds={[...ancestorIds, issueId]}
+            />
+          ))}
       {isLastChild && <DropIndicator classNames={"absolute z-[2]"} isVisible={instruction === "DRAG_BELOW"} />}
     </div>
   );

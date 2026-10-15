@@ -8,7 +8,6 @@ import { useTranslation } from "@plane/i18n";
 // ui
 import { Button } from "@makeplane/propel/components/button";
 import { DialogActions, DialogInfo } from "@makeplane/propel/components/dialog";
-import { PlaneLogo } from "@plane/blocks/icons";
 
 export function ProductUpdatesFooter() {
   const { t } = useTranslation();
@@ -67,7 +66,6 @@ export function ProductUpdatesFooter() {
         render={
           <a href="https://plane.so/pages" target="_blank" rel="noreferrer" aria-label={t("powered_by_plane_pages")} />
         }
-        icon={<PlaneLogo className="h-4 w-auto text-primary" />}
         label={t("powered_by_plane_pages")}
       />
     </DialogActions>

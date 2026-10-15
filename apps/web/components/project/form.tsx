@@ -34,6 +34,7 @@ import { usePlatformOS } from "@/hooks/use-platform-os";
 import { ProjectService } from "@/services/project";
 // local imports
 import { ProjectNetworkIcon } from "./project-network-icon";
+import { SaveProjectTemplateModal } from "./templates";
 
 export interface IProjectDetailsForm {
   project: IProject;
@@ -49,6 +50,7 @@ export function ProjectDetailsForm(props: IProjectDetailsForm) {
   // states
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [saveTemplate, setSaveTemplate] = useState(false);
   // store hooks
   const { updateProject } = useProject();
   const { isMobile } = usePlatformOS();
@@ -204,6 +206,21 @@ export function ProjectDetailsForm(props: IProjectDetailsForm) {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
+      {isAdmin && (
+        <div className="mb-4 flex justify-end">
+          <Button
+            type="button"
+            variant="secondary"
+            size="md"
+            stretch="auto"
+            label={t("planning.save_template")}
+            onClick={() => setSaveTemplate(true)}
+          />
+        </div>
+      )}
+      {saveTemplate && (
+        <SaveProjectTemplateModal workspace={workspaceSlug} project={project} close={() => setSaveTemplate(false)} />
+      )}
       <div className="relative h-44 w-full">
         <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
         <CoverImage src={coverImage} alt="Project cover image" className="h-44 w-full rounded-md" />

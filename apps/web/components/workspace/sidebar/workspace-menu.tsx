@@ -9,9 +9,10 @@ import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
 import { Collapsible } from "@makeplane/propel/components/collapsible";
 // plane imports
-import { AnalyticsOutline, CyclesOutline, ProjectsOutline, ViewsOutline } from "@makeplane/propel/icons";
+import { AnalyticsOutline, ProjectsOutline, ViewsOutline } from "@makeplane/propel/icons";
 import { useTranslation } from "@plane/i18n";
 import { EUserWorkspaceRoles } from "@plane/types";
+import { Wrench } from "lucide-react";
 // hooks
 import useLocalStorage from "@/hooks/use-local-storage";
 // local imports
@@ -37,18 +38,18 @@ export const SidebarWorkspaceMenu = observer(function SidebarWorkspaceMenu() {
       Icon: ProjectsOutline,
     },
     {
+      key: "resources",
+      labelTranslationKey: "planning.resources",
+      href: `/${workspaceSlug}/resources/`,
+      access: [EUserWorkspaceRoles.ADMIN, EUserWorkspaceRoles.MEMBER],
+      Icon: Wrench,
+    },
+    {
       key: "views",
       labelTranslationKey: "sidebar.views",
       href: `/${workspaceSlug}/workspace-views/all-issues/`,
       access: [EUserWorkspaceRoles.ADMIN, EUserWorkspaceRoles.MEMBER, EUserWorkspaceRoles.GUEST],
       Icon: ViewsOutline,
-    },
-    {
-      key: "active-cycles",
-      labelTranslationKey: "sidebar.cycles",
-      href: `/${workspaceSlug}/active-cycles/`,
-      access: [EUserWorkspaceRoles.ADMIN, EUserWorkspaceRoles.MEMBER],
-      Icon: CyclesOutline,
     },
     {
       key: "analytics",

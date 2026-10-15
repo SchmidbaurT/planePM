@@ -17,6 +17,7 @@ import { ControlLink } from "@plane/blocks/layout";
 import { cn, generateWorkItemLink } from "@plane/utils";
 // hooks
 import { useIssueDetail } from "@/hooks/store/use-issue-detail";
+import { useIssueBlocked } from "@/hooks/store/use-issue-blocked";
 import { useIssues } from "@/hooks/store/use-issues";
 import { useProject } from "@/hooks/store/use-project";
 import { useProjectState } from "@/hooks/store/use-project-state";
@@ -29,6 +30,7 @@ import { IssueIdentifier } from "@/components/issues/issue-detail/issue-identifi
 import { WorkItemPreviewCard } from "../../preview-card";
 import type { TRenderQuickActions } from "../list/list-view-types";
 import type { CalendarStoreType } from "./base-calendar-root";
+import { WorkItemParentLabel } from "../parent-label";
 
 type Props = {
   issue: TIssue;
@@ -40,6 +42,7 @@ type Props = {
 export const CalendarIssueBlock = observer(
   forwardRef(function CalendarIssueBlock(props: Props, ref: React.ForwardedRef<HTMLAnchorElement>) {
     const { issue, quickActions, isDragging = false, isEpic = false } = props;
+    const isBlocked = useIssueBlocked(issue.id);
     // states
     const [isMenuActive, setIsMenuActive] = useState(false);
     // refs
@@ -120,21 +123,24 @@ export const CalendarIssueBlock = observer(
                 <div
                   ref={blockRef}
                   className={cn(
-                    "group/calendar-block flex h-10 w-full items-center justify-between gap-1.5 rounded-sm px-4 py-1.5 md:h-8 md:px-1",
+                    "group/calendar-block flex h-12 w-full items-center justify-between gap-1.5 rounded-sm px-4 py-1.5 md:px-1",
                     {
                       "border-accent-strong bg-surface-2 shadow-raised-200": isDragging,
-                      "bg-surface-1 hover:bg-surface-2": !isDragging,
+                      "bg-surface-1 hover:bg-surface-2": !isDragging && !isBlocked,
+                      "bg-danger-subtle": isBlocked,
                       "border border-accent-strong hover:border-accent-strong": getIsIssuePeeked(issue.id),
                     }
                   )}
                 >
-                  <div className="flex h-full items-center gap-1.5 truncate">
+                  <div className="flex h-full min-w-0 flex-1 items-center gap-1.5">
                     <span
                       className="h-full w-0.5 flex-shrink-0 rounded-sm"
                       style={{
                         backgroundColor: stateColor,
                       }}
                     />
+                    <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                    <div className="flex min-w-0 items-center gap-1.5">
                     {issue.project_id && (
                       <IssueIdentifier
                         issueId={issue.id}
@@ -144,7 +150,10 @@ export const CalendarIssueBlock = observer(
                         displayProperties={issuesFilter?.issueFilters?.displayProperties}
                       />
                     )}
-                    <div className="truncate text-13 font-medium md:text-11 md:font-regular">{issue.name}</div>
+                    <div className="min-w-0 flex-1 truncate text-13 font-medium md:text-11 md:font-regular">{issue.name}</div>
+                    </div>
+                    <WorkItemParentLabel parentId={issue.parent_id} />
+                    </div>
                   </div>
                   {/* Wrapper exists only to stop clicks reaching the ControlLink; the
                       quick-action menu inside carries its own interactive semantics. */}

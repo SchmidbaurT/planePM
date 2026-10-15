@@ -100,9 +100,18 @@ export function ExistingIssuesListModal(props: Props) {
 
     setIsSubmitting(true);
 
-    await handleOnSubmit(selectedIssues).finally(() => setIsSubmitting(false));
-
-    handleClose();
+    try {
+      await handleOnSubmit(selectedIssues);
+      handleClose();
+    } catch (error) {
+      setToast({
+        type: "error",
+        title: t("toast.error"),
+        message: error instanceof Error ? error.message : t("planning.error"),
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleSearch = () => {

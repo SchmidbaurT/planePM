@@ -19,6 +19,7 @@ export const NAMESPACES = [
   "navigation",
   "notification",
   "page",
+  "planning",
   "power-k",
   "project",
   "project-settings",

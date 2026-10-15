@@ -43,6 +43,10 @@ export interface IPartialProject {
 }
 
 export interface IProject extends IPartialProject {
+  template_id?: string | null;
+  template_start_date?: string | null;
+  template_copy_assignees?: boolean;
+  template_milestone_owner_id?: string | null;
   archive_in?: number;
   close_in?: number;
   // only for uploading the cover image

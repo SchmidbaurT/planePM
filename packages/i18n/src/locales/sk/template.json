@@ -170,7 +170,7 @@
           },
           "company_name": {
             "label": "Názov spoločnosti",
-            "placeholder": "Plane",
+            "placeholder": "SchmidbaurPM",
             "validation": {
               "required": "Názov spoločnosti je povinný",
               "maxLength": "Názov spoločnosti by nemal presiahnuť 255 znakov"

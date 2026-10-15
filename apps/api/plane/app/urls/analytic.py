@@ -3,6 +3,7 @@
 # See the LICENSE file for details.
 
 from django.urls import path
+from plane.app.views.analytic.portfolio import PortfolioEndpoint, TimelineRelationsEndpoint
 
 
 from plane.app.views import (
@@ -22,6 +23,9 @@ from plane.app.views import (
 
 
 urlpatterns = [
+    path("workspaces/<str:slug>/timeline-relations/", TimelineRelationsEndpoint.as_view()),
+    path("workspaces/<str:slug>/portfolio/", PortfolioEndpoint.as_view()),
+    path("workspaces/<str:slug>/portfolio/projects/<uuid:project_id>/", PortfolioEndpoint.as_view()),
     path(
         "workspaces/<str:slug>/analytics/",
         AnalyticsEndpoint.as_view(),

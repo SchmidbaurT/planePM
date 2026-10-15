@@ -62,11 +62,6 @@ export const coreRoutes: RouteConfigEntry[] = [
         // Workspace Home
         route(":workspaceSlug", "./(all)/[workspaceSlug]/(projects)/page.tsx"),
 
-        // Active Cycles
-        layout("./(all)/[workspaceSlug]/(projects)/active-cycles/layout.tsx", [
-          route(":workspaceSlug/active-cycles", "./(all)/[workspaceSlug]/(projects)/active-cycles/page.tsx"),
-        ]),
-
         // Analytics
         layout("./(all)/[workspaceSlug]/(projects)/analytics/[tabId]/layout.tsx", [
           route(":workspaceSlug/analytics/:tabId", "./(all)/[workspaceSlug]/(projects)/analytics/[tabId]/page.tsx"),
@@ -129,9 +124,15 @@ export const coreRoutes: RouteConfigEntry[] = [
         // Project List
         layout("./(all)/[workspaceSlug]/(projects)/projects/(list)/layout.tsx", [
           route(":workspaceSlug/projects", "./(all)/[workspaceSlug]/(projects)/projects/(list)/page.tsx"),
+          route(":workspaceSlug/projects/dashboard", "./(all)/[workspaceSlug]/(projects)/projects/(list)/dashboard/page.tsx"),
+          route(":workspaceSlug/projects/timeline", "./(all)/[workspaceSlug]/(projects)/projects/(list)/timeline/page.tsx"),
         ]),
 
         // Project Detail
+        layout("./(all)/[workspaceSlug]/(projects)/resources/layout.tsx", [
+          route(":workspaceSlug/resources", "./(all)/[workspaceSlug]/(projects)/resources/page.tsx"),
+          route(":workspaceSlug/resources/:resourceId", "./(all)/[workspaceSlug]/(projects)/resources/page.tsx", { id: "resource-detail" }),
+        ]),
         layout("./(all)/[workspaceSlug]/(projects)/projects/(detail)/[projectId]/layout.tsx", [
           // Project Issues List
           layout("./(all)/[workspaceSlug]/(projects)/projects/(detail)/[projectId]/issues/(list)/layout.tsx", [
@@ -265,10 +266,6 @@ export const coreRoutes: RouteConfigEntry[] = [
           route(
             ":workspaceSlug/settings/members",
             "./(all)/[workspaceSlug]/(settings)/settings/(workspace)/members/page.tsx"
-          ),
-          route(
-            ":workspaceSlug/settings/billing",
-            "./(all)/[workspaceSlug]/(settings)/settings/(workspace)/billing/page.tsx"
           ),
           route(
             ":workspaceSlug/settings/exports",

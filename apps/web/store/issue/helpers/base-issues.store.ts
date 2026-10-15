@@ -29,6 +29,7 @@ import type {
 import { EIssueServiceType, EIssueLayoutTypes } from "@plane/types";
 // helpers
 import { convertToISODateString } from "@plane/utils";
+import { getHierarchyRootIds } from "@/helpers/planning";
 // plane web imports
 // services
 import { CycleService } from "@/services/cycle.service";
@@ -310,17 +311,28 @@ export abstract class BaseIssuesStore implements IBaseIssuesStore {
 
     if (!groupedIssueIds) return undefined;
 
+    const selectRows = (ids: string[]) => {
+      const layout = this.issueFilterStore.issueFilters?.displayFilters?.layout;
+      if (layout !== EIssueLayoutTypes.LIST && layout !== EIssueLayoutTypes.SPREADSHEET) return ids;
+      const visibleIds = Object.values(groupedIssueIds).flatMap((group) =>
+        Array.isArray(group) ? group : Object.values(group).flat()
+      );
+      const issueMap = Object.fromEntries(visibleIds.map((id) => [id, this.rootIssueStore.issues.getIssueById(id)]));
+      const roots = new Set(getHierarchyRootIds(visibleIds, issueMap));
+      return ids.filter((id) => roots.has(id));
+    };
+
     const allIssues = groupedIssueIds[ALL_ISSUES] ?? [];
     if (!this.groupBy && !this.subGroupBy && allIssues && Array.isArray(allIssues)) {
-      return allIssues;
+      return selectRows(allIssues);
     }
 
     if (this.groupBy && groupId && groupedIssueIds?.[groupId] && Array.isArray(groupedIssueIds[groupId])) {
-      return groupedIssueIds[groupId] ?? [];
+      return selectRows(groupedIssueIds[groupId] ?? []);
     }
 
     if (this.groupBy && this.subGroupBy && groupId && subGroupId) {
-      return (groupedIssueIds as TSubGroupedIssues)[groupId]?.[subGroupId] ?? [];
+      return selectRows((groupedIssueIds as TSubGroupedIssues)[groupId]?.[subGroupId] ?? []);
     }
 
     return undefined;
@@ -577,6 +589,11 @@ export abstract class BaseIssuesStore implements IBaseIssuesStore {
 
       // call API to update the issue
       await this.issueService.patchIssue(workspaceSlug, projectId, issueId, data);
+      if (data.blocker_issue_ids !== undefined) {
+        const refreshed = await this.issueService.retrieve(workspaceSlug, projectId, issueId);
+        this.rootIssueStore.issues.updateIssue(issueId, refreshed);
+        this.updateIssueList(refreshed, { ...issueBeforeUpdate, ...data } as TIssue);
+      }
 
       // call fetch Parent Stats
       this.fetchParentStats(workspaceSlug, projectId);
@@ -759,7 +776,7 @@ export abstract class BaseIssuesStore implements IBaseIssuesStore {
     projectId?: string
   ) {
     if (!projectId) return;
-    const issueDatesBeforeChange: { id: string; start_date?: string; target_date?: string }[] = [];
+    const issueDatesBeforeChange: { id: string; start_date: string | null; target_date: string | null }[] = [];
     try {
       const getIssueById = this.rootIssueStore.issues.getIssueById;
       runInAction(() => {
@@ -774,8 +791,8 @@ export abstract class BaseIssuesStore implements IBaseIssuesStore {
           if (currIssue) {
             issueDatesBeforeChange.push({
               id: update.id,
-              start_date: currIssue.start_date ?? undefined,
-              target_date: currIssue.target_date ?? undefined,
+              start_date: currIssue.start_date ?? null,
+              target_date: currIssue.target_date ?? null,
             });
           }
 
@@ -788,9 +805,7 @@ export abstract class BaseIssuesStore implements IBaseIssuesStore {
       runInAction(() => {
         // oxlint-disable-next-line no-shadow
         for (const update of issueDatesBeforeChange) {
-          const dates: Partial<TIssue> = {};
-          if (update.start_date) dates.start_date = update.start_date;
-          if (update.target_date) dates.target_date = update.target_date;
+          const dates: Partial<TIssue> = { start_date: update.start_date, target_date: update.target_date };
 
           this.issueUpdate(workspaceSlug, projectId, update.id, dates, false);
         }

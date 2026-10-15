@@ -47,6 +47,7 @@ from .issue import (
     IssueDescriptionVersion,
 )
 from .module import Module, ModuleIssue, ModuleLink, ModuleMember, ModuleUserProperties
+from .resource import WorkspaceResource, IssueResourceRequirement, ResourceBlackout
 from .notification import EmailNotificationLog, Notification, UserNotificationPreference
 from .page import Page, PageLabel, PageLog, ProjectPage, PageVersion
 from .project import (
@@ -60,6 +61,8 @@ from .project import (
     ProjectUserProperty,
 )
 from .session import Session
+from .project_template import ProjectTemplate
+from .milestone import ProjectMilestone
 from .social_connection import SocialLoginConnection
 from .state import State, StateGroup, DEFAULT_STATES
 from .user import Account, Profile, User, BotTypeEnum

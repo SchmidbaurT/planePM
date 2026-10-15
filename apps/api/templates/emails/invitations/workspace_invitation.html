@@ -1,9 +1,10 @@
+{% load branding %}{% brand_name as app_name %}{% brand_logo_url as app_logo_url %}
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>{{first_name}} invited you to {{workspace_name}} on Plane</title>
+    <title>{{first_name}} invited you to {{workspace_name}} on {{ app_name }}</title>
 
     <style>
       /* Basic resets for email clients */
@@ -73,7 +74,7 @@
         visibility: hidden;
       "
     >
-      {{first_name}} has invited you to join {{workspace_name}} on Plane.
+      {{first_name}} has invited you to join {{workspace_name}} on {{ app_name }}.
     </span>
 
     <!-- Outer Wrapper -->
@@ -94,16 +95,11 @@
             <table
               role="presentation"
               width="100%"
-              style="background-color: #000000;"
+              style="background-color: #ffffff;"
             >
               <tr>
                 <td style="padding: 24px 40px; text-align: center;">
-                  <img
-                    src="https://media.docs.plane.so/logo/new-logo-dark.png"
-                    width="120"
-                    alt="Plane"
-                    style="height: auto; display: block; margin: 0 auto;"
-                  />
+                  <img src="{{ app_logo_url }}" width="180" alt="{{ app_name }}" style="display: block; width: 180px; max-width: 100%; height: auto; margin: 0 auto;" />
                 </td>
               </tr>
             </table>
@@ -152,13 +148,13 @@
                       color: #111111;
                     "
                   >
-                    Join {{workspace_name}} on Plane
+                    Join {{workspace_name}} on {{ app_name }}
                   </h1>
 
                   <!-- Intro copy -->
                   <p style="margin: 0 0 12px;">
                     {{first_name}} has invited you to collaborate with them in
-                    <strong>{{workspace_name}}</strong> workspace on Plane.
+                    <strong>{{workspace_name}}</strong> workspace on {{ app_name }}.
                   </p>
 
                   <!-- Primary button -->
@@ -289,7 +285,7 @@
                   "
                 >
                   <p style="margin: 0;">
-                    Plane Software, Inc.
+                    {{ app_name }}
                   </p>
                 </td>
               </tr>

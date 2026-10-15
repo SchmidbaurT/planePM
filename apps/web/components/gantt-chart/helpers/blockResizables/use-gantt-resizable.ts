@@ -8,6 +8,8 @@ import { useRef, useState } from "react";
 // Plane
 import { setToast } from "@plane/blocks/toast";
 import type { IBlockUpdateDependencyData, IGanttBlock } from "@plane/types";
+import { useTranslation } from "@plane/i18n";
+import { getResourceConflict } from "@/helpers/planning";
 // hooks
 import { useTimeLineChartStore } from "@/hooks/use-timeline-chart";
 //
@@ -19,6 +21,7 @@ export const useGanttResizable = (
   ganttContainerRef: React.RefObject<HTMLDivElement | null>,
   updateBlockDates?: (updates: IBlockUpdateDependencyData[]) => Promise<void>
 ) => {
+  const { t } = useTranslation();
   // refs
   const initialPositionRef = useRef<{ marginLeft: number; width: number; offsetX: number }>({
     marginLeft: 0,
@@ -113,7 +116,7 @@ export const useGanttResizable = (
     };
 
     // remove event listeners and call updateBlockDates
-    const handleMouseUp = () => {
+    const handleMouseUp = async () => {
       setIsMoving(undefined);
 
       document.removeEventListener("mousemove", handleMouseMove);
@@ -126,16 +129,17 @@ export const useGanttResizable = (
 
       try {
         const blockUpdates = getUpdatedPositionAfterDrag(block.id, shouldUpdateHalfBlock);
-        if (updateBlockDates) updateBlockDates(blockUpdates);
-      } catch {
+        if (updateBlockDates) await updateBlockDates(blockUpdates);
+      } catch (error) {
+        const conflict = getResourceConflict(error);
         setToast({
           type: "error",
-          title: "Error",
-          message: "Something went wrong while updating block dates",
+          title: t("error"),
+          message: conflict ? t(conflict.code === "RESOURCE_IN_USE" ? "planning.in_use" : "planning.conflict") : t("planning.error"),
         });
+      } finally {
+        setIsDragging(false);
       }
-
-      setIsDragging(false);
     };
 
     document.addEventListener("mousemove", handleMouseMove);

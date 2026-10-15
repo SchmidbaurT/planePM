@@ -6,7 +6,7 @@
 
 import { useCallback } from "react";
 import { observer } from "mobx-react";
-import { useParams } from "next/navigation";
+import { useParams, usePathname } from "next/navigation";
 import { ChevronDownOutline, FilterOutline } from "@makeplane/propel/icons";
 // plane imports
 import { useTranslation } from "@plane/i18n";
@@ -25,6 +25,7 @@ export const ProjectsListMobileHeader = observer(function ProjectsListMobileHead
   const { t } = useTranslation();
   // router
   const { workspaceSlug } = useParams();
+  const pathname = usePathname().replace(/\/$/, "");
   const {
     currentWorkspaceDisplayFilters: displayFilters,
     currentWorkspaceFilters: filters,
@@ -55,6 +56,8 @@ export const ProjectsListMobileHeader = observer(function ProjectsListMobileHead
   );
 
   const isFiltersApplied = calculateTotalFilters(filters ?? {}) !== 0;
+
+  if (pathname.endsWith("/dashboard") || pathname.endsWith("/timeline")) return null;
 
   return (
     <div className="flex w-full border-b border-subtle bg-surface-1 py-2 md:hidden">

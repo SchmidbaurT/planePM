@@ -102,6 +102,7 @@ def close_old_issues():
                     archived_at__isnull=True,
                     updated_at__lte=(timezone.now() - timedelta(days=close_in * 30)),
                     state__group__in=["backlog", "unstarted", "started"],
+                    state__is_blocked=False,
                 ),
                 Q(issue_cycle__isnull=True)
                 | (Q(issue_cycle__cycle__end_date__lt=timezone.now()) & Q(issue_cycle__isnull=False)),

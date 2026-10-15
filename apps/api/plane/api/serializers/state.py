@@ -17,6 +17,10 @@ class StateSerializer(BaseSerializer):
     """
 
     def validate(self, data):
+        if self.instance and self.instance.is_blocked and (data.get("group", "started") != "started" or data.get("default", False)):
+            raise serializers.ValidationError({"code": "BLOCKING_SYSTEM_STATE"})
+        if self.instance and self.instance.blocked_release_projects.exists() and data.get("group", self.instance.group) != "backlog":
+            raise serializers.ValidationError({"code": "BLOCKING_RELEASE_STATE"})
         # If the default is being provided then make all other states default False
         if data.get("default", False):
             State.objects.filter(project_id=self.context.get("project_id")).update(default=False)
@@ -38,6 +42,7 @@ class StateSerializer(BaseSerializer):
             "project",
             "deleted_at",
             "slug",
+            "is_blocked",
         ]
 
 
@@ -51,5 +56,5 @@ class StateLiteSerializer(BaseSerializer):
 
     class Meta:
         model = State
-        fields = ["id", "name", "color", "group"]
+        fields = ["id", "name", "color", "group", "is_blocked"]
         read_only_fields = fields

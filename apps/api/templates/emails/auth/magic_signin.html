@@ -1,9 +1,10 @@
+{% load branding %}{% brand_name as app_name %}{% brand_logo_url as app_logo_url %}
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Your Plane login code</title>
+    <title>Your {{ app_name }} login code</title>
 
     <style>
       /* Basic resets for email clients */
@@ -73,7 +74,7 @@
         visibility: hidden;
       "
     >
-      Your Plane login code {{code}} is valid for 10 minutes.
+      Your {{ app_name }} login code {{code}} is valid for 10 minutes.
     </span>
 
     <!-- Outer Wrapper -->
@@ -94,16 +95,11 @@
             <table
               role="presentation"
               width="100%"
-              style="background-color: #000000;"
+              style="background-color: #ffffff;"
             >
               <tr>
                 <td style="padding: 24px 40px; text-align: center;">
-                  <img
-                    src="https://media.docs.plane.so/logo/new-logo-dark.png"
-                    width="120"
-                    alt="Plane"
-                    style="height: auto; display: block; margin: 0 auto;"
-                  />
+                  <img src="{{ app_logo_url }}" width="180" alt="{{ app_name }}" style="display: block; width: 180px; max-width: 100%; height: auto; margin: 0 auto;" />
                 </td>
               </tr>
             </table>
@@ -152,7 +148,7 @@
                       color: #111111;
                     "
                   >
-                    Your login code for Plane
+                    Your login code for {{ app_name }}
                   </h1>
 
                   <!-- Code chip -->
@@ -248,7 +244,7 @@
                   "
                 >
                   <p style="margin: 0;">
-                    Plane Software, Inc.
+                    {{ app_name }}
                   </p>
                 </td>
               </tr>

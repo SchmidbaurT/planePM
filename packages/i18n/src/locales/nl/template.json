@@ -170,7 +170,7 @@
           },
           "company_name": {
             "label": "Bedrijfsnaam",
-            "placeholder": "Plane",
+            "placeholder": "SchmidbaurPM",
             "validation": {
               "required": "Bedrijfsnaam is verplicht",
               "maxLength": "Bedrijfsnaam moet minder dan 255 tekens zijn"

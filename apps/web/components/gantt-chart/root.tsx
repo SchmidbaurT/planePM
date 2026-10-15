@@ -7,7 +7,7 @@
 import { useEffect } from "react";
 import { observer } from "mobx-react";
 // components
-import type { IBlockUpdateData, IBlockUpdateDependencyData } from "@plane/types";
+import type { IBlockUpdateData, IBlockUpdateDependencyData, TGanttViews } from "@plane/types";
 // hooks
 import { useTimeLineChartStore } from "@/hooks/use-timeline-chart";
 import { ChartViewRoot } from "./chart/root";
@@ -35,6 +35,10 @@ type GanttChartRootProps = {
   showAllBlocks?: boolean;
   showToday?: boolean;
   isEpic?: boolean;
+  initialView?: TGanttViews;
+  extraRows?: { id: string; sidebar: React.ReactNode; chart: React.ReactNode }[];
+  itemCount?: number;
+  dependencyOverlay?: React.ReactNode;
 };
 
 export const GanttChartRoot = observer(function GanttChartRoot(props: GanttChartRootProps) {
@@ -61,6 +65,10 @@ export const GanttChartRoot = observer(function GanttChartRoot(props: GanttChart
     quickAdd,
     updateBlockDates,
     isEpic = false,
+    initialView,
+    extraRows,
+    itemCount,
+    dependencyOverlay,
   } = props;
 
   const { setBlockIds } = useTimeLineChartStore();
@@ -94,6 +102,10 @@ export const GanttChartRoot = observer(function GanttChartRoot(props: GanttChart
       showToday={showToday}
       updateBlockDates={updateBlockDates}
       isEpic={isEpic}
+      initialView={initialView}
+      extraRows={extraRows}
+      itemCount={itemCount}
+      dependencyOverlay={dependencyOverlay}
     />
   );
 });

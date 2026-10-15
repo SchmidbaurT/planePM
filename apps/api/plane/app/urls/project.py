@@ -3,6 +3,8 @@
 # See the LICENSE file for details.
 
 from django.urls import path
+from plane.app.views.project.template import ProjectTemplatesEndpoint
+from plane.app.views.project.milestone import ProjectMilestonesEndpoint, UserWorkPlanEndpoint, BlockingWorkItemsEndpoint
 
 from plane.app.views import (
     ProjectViewSet,
@@ -22,6 +24,20 @@ from plane.app.views import (
 
 
 urlpatterns = [
+        path("workspaces/<str:slug>/blocking-work-items/", BlockingWorkItemsEndpoint.as_view()),
+    path(
+        "workspaces/<str:slug>/projects/<uuid:project_id>/milestone-work-items/",
+        ProjectMilestonesEndpoint.as_view(),
+        {"work_items": True},
+    ),
+    path("workspaces/<str:slug>/users/<uuid:user_id>/work-plan/", UserWorkPlanEndpoint.as_view()),
+    path("workspaces/<str:slug>/projects/<uuid:project_id>/milestones/", ProjectMilestonesEndpoint.as_view()),
+    path(
+        "workspaces/<str:slug>/projects/<uuid:project_id>/milestones/<uuid:milestone_id>/",
+        ProjectMilestonesEndpoint.as_view(),
+    ),
+    path("workspaces/<str:slug>/project-templates/", ProjectTemplatesEndpoint.as_view()),
+    path("workspaces/<str:slug>/project-templates/<uuid:template_id>/", ProjectTemplatesEndpoint.as_view()),
     path(
         "workspaces/<str:slug>/projects/",
         ProjectViewSet.as_view({"get": "list", "post": "create"}),

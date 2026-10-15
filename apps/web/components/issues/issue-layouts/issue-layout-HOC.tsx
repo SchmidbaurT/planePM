@@ -5,6 +5,9 @@
  */
 
 import { observer } from "mobx-react";
+import { useEffect } from "react";
+import { useParams } from "next/navigation";
+import { useIssuesActions } from "@/hooks/use-issues-actions";
 // plane imports
 import { EIssueLayoutTypes } from "@plane/types";
 // components
@@ -48,6 +51,14 @@ export const IssueLayoutHOC = observer(function IssueLayoutHOC(props: Props) {
 
   const storeType = useIssueStoreType();
   const { issues } = useIssues(storeType);
+  const { fetchIssues } = useIssuesActions(storeType);
+  const { workspaceSlug, viewId, profileViewId } = useParams();
+  useEffect(() => {
+    const refresh = (event: Event) => { if (event.type === "focus" || (event as CustomEvent<{ workspace: string }>).detail.workspace === workspaceSlug) void fetchIssues("mutation", { canGroup: layout !== EIssueLayoutTypes.GANTT, perPageCount: 100 }, (viewId ?? profileViewId)?.toString()).catch(() => undefined); };
+    window.addEventListener("plane:issues-changed", refresh);
+    window.addEventListener("focus", refresh);
+    return () => { window.removeEventListener("plane:issues-changed", refresh); window.removeEventListener("focus", refresh); };
+  }, [fetchIssues, workspaceSlug, viewId, profileViewId, layout]);
 
   const issueCount = issues.getGroupIssueCount(undefined, undefined, false);
 
@@ -55,7 +66,11 @@ export const IssueLayoutHOC = observer(function IssueLayoutHOC(props: Props) {
     return <ActiveLoader layout={layout} />;
   }
 
-  if (issues.getGroupIssueCount(undefined, undefined, false) === 0 && layout !== EIssueLayoutTypes.CALENDAR) {
+  if (
+    issues.getGroupIssueCount(undefined, undefined, false) === 0 &&
+    layout !== EIssueLayoutTypes.CALENDAR &&
+    layout !== EIssueLayoutTypes.GANTT
+  ) {
     return <IssueLayoutEmptyState storeType={storeType} />;
   }
 

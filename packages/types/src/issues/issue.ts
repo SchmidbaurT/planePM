@@ -11,6 +11,7 @@ import type { TIssueAttachment } from "./issue_attachment";
 import type { TIssueLink } from "./issue_link";
 import type { TIssueReaction, IIssuePublicReaction, IPublicVote } from "./issue_reaction";
 import type { TIssueRelationTypes } from "./issue_relation";
+import type { TResourceRequirement } from "../planning";
 
 export enum EIssueLayoutTypes {
   LIST = "list",
@@ -43,6 +44,9 @@ export enum EIssuesStoreType {
 }
 
 export type TBaseIssue = {
+  blocker_issue_ids?: string[];
+  expected_updated_at?: string;
+  is_blocked?: boolean;
   id: string;
   sequence_id: number;
   name: string;
@@ -77,6 +81,7 @@ export type TBaseIssue = {
   is_draft: boolean;
   is_epic?: boolean;
   is_intake?: boolean;
+  resource_requirements?: TResourceRequirement[];
 };
 
 type IssueRelation = {

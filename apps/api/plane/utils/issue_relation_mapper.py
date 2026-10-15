@@ -2,8 +2,11 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # See the LICENSE file for details.
 
+
 def get_inverse_relation(relation_type):
     relation_mapping = {
+        "finish_to_start": "start_after_finish",
+        "start_after_finish": "finish_to_start",
         "start_after": "start_before",
         "finish_after": "finish_before",
         "blocked_by": "blocking",
@@ -19,6 +22,8 @@ def get_inverse_relation(relation_type):
 def get_actual_relation(relation_type):
     # This function is used to get the actual relation type which is stored in database
     actual_relation = {
+        "finish_to_start": "finish_to_start",
+        "start_after_finish": "finish_to_start",
         "start_after": "start_before",
         "finish_after": "finish_before",
         "blocking": "blocked_by",

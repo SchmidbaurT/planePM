@@ -6,6 +6,7 @@
 
 import { useMemo } from "react";
 import { observer } from "mobx-react";
+import { getResourceConflict } from "@/helpers/planning";
 // plane imports
 import { EUserPermissions, EUserPermissionsLevel } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
@@ -96,10 +97,11 @@ export const IssueDetailRoot = observer(function IssueDetailRoot(props: TIssueDe
           await updateIssue(workspaceSlug, projectId, issueId, data);
         } catch (error) {
           console.log("Error in updating issue:", error);
+          const conflict = getResourceConflict(error);
           setToast({
             title: t("common.error.label"),
             type: "error",
-            message: t("entity.update.failed", { entity: t("issue.label") }),
+            message: conflict ? `${t(conflict.code === "RESOURCE_IN_USE" ? "planning.in_use" : "planning.conflict")}${conflict.date ? ` (${new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(new Date(`${conflict.date}T12:00:00`))})` : ""}` : t("entity.update.failed", { entity: t("issue.label") }),
           });
         }
       },

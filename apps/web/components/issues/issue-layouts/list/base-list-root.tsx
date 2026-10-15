@@ -90,7 +90,10 @@ export const BaseListRoot = observer(function BaseListRoot(props: IBaseListRoot)
     fetchIssues("init-loader", { canGroup: true, perPageCount: group_by ? 50 : 100 }, viewId);
   }, [fetchIssues, storeType, group_by, viewId]);
 
-  const groupedIssueIds = issues?.groupedIssueIds as TGroupedIssues | undefined;
+  const loadedGroups = issues?.groupedIssueIds as TGroupedIssues | undefined;
+  const groupedIssueIds = loadedGroups && !isEpic
+    ? Object.fromEntries(Object.keys(loadedGroups).map((groupId) => [groupId, issues.getIssueIds(groupId) ?? []]))
+    : loadedGroups;
   // auth
   const isEditingAllowed = allowPermissions(
     [EUserPermissions.ADMIN, EUserPermissions.MEMBER],

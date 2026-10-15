@@ -43,6 +43,7 @@ import { IssueCycleSelect } from "./cycle-select";
 import { IssueLabel } from "./label";
 import { IssueModuleSelect } from "./module-select";
 import type { TIssueOperations } from "./root";
+import { IssueResources } from "@/components/resources/issue-resources";
 
 type Props = {
   workspaceSlug: string;
@@ -88,6 +89,8 @@ export const IssueDetailsSidebar = observer(function IssueDetailsSidebar(props: 
             <SidebarPropertyListItem icon={StateOutline} label={t("common.state")}>
               <StateSelect
                 testId="work-item-state-select"
+                issueId={issueId}
+                onBlockingChange={(data) => issueOperations.update(workspaceSlug, projectId, issueId, data)}
                 value={issue?.state_id}
                 onChange={(val) => issueOperations.update(workspaceSlug, projectId, issueId, { state_id: val })}
                 projectId={projectId}
@@ -177,6 +180,16 @@ export const IssueDetailsSidebar = observer(function IssueDetailsSidebar(props: 
               </div>
             </SidebarPropertyListItem>
 
+            <IssueResources
+              key={issueId}
+              workspace={workspaceSlug}
+              projectId={projectId}
+              issueId={issueId}
+              startDate={issue.start_date}
+              endDate={issue.target_date}
+              stateGroup={stateDetails?.group}
+              disabled={!isEditable}
+            />
             {projectId && areEstimateEnabledByProjectId(projectId) && (
               <SidebarPropertyListItem icon={EstimateOutline} label={t("common.estimate")}>
                 <EstimateSelect

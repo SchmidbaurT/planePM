@@ -208,6 +208,7 @@ class WorkspaceIssueAPIEndpoint(BaseAPIView):
             .select_related("parent")
             .prefetch_related("assignees")
             .prefetch_related("labels")
+            .prefetch_related("resource_requirements")
             .order_by(self.kwargs.get("order_by", "-created_at"))
         ).distinct()
 
@@ -284,6 +285,7 @@ class IssueListCreateAPIEndpoint(BaseAPIView):
             .select_related("parent")
             .prefetch_related("assignees")
             .prefetch_related("labels")
+            .prefetch_related("resource_requirements")
             .order_by(self.kwargs.get("order_by", "-created_at"))
         ).distinct()
 
@@ -461,6 +463,7 @@ class IssueListCreateAPIEndpoint(BaseAPIView):
         serializer = IssueSerializer(
             data=request.data,
             context={
+                "request": request,
                 "project_id": project_id,
                 "workspace_id": project.workspace_id,
                 "default_assignee_id": project.default_assignee_id,
@@ -551,6 +554,7 @@ class IssueDetailAPIEndpoint(BaseAPIView):
             .select_related("parent")
             .prefetch_related("assignees")
             .prefetch_related("labels")
+            .prefetch_related("resource_requirements")
             .order_by(self.kwargs.get("order_by", "-created_at"))
         ).distinct()
 
@@ -652,6 +656,7 @@ class IssueDetailAPIEndpoint(BaseAPIView):
                     issue,
                     data=request.data,
                     context={
+                        "request": request,
                         "project_id": project_id,
                         "workspace_id": project.workspace_id,
                     },
@@ -697,6 +702,7 @@ class IssueDetailAPIEndpoint(BaseAPIView):
                 serializer = IssueSerializer(
                     data=request.data,
                     context={
+                        "request": request,
                         "project_id": project_id,
                         "workspace_id": project.workspace_id,
                         "default_assignee_id": project.default_assignee_id,
@@ -785,7 +791,7 @@ class IssueDetailAPIEndpoint(BaseAPIView):
         serializer = IssueSerializer(
             issue,
             data=request.data,
-            context={"project_id": project_id, "workspace_id": project.workspace_id},
+            context={"project_id": project_id, "workspace_id": project.workspace_id, "request": request},
             partial=True,
         )
         if serializer.is_valid():

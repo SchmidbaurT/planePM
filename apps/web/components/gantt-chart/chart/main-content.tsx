@@ -27,7 +27,7 @@ import { GanttChartBlocksList } from "@/components/gantt-chart/blocks/blocks-lis
 import { IssueBulkOperationsRoot } from "@/components/issues/bulk-operations";
 import { useBulkOperationStatus } from "@/hooks/use-bulk-operation-status";
 // local imports
-import { DEFAULT_BLOCK_WIDTH, GANTT_SELECT_GROUP, HEADER_HEIGHT } from "../constants";
+import { BLOCK_HEIGHT, DEFAULT_BLOCK_WIDTH, GANTT_SELECT_GROUP, HEADER_HEIGHT } from "../constants";
 import { getItemPositionWidth } from "../views";
 import { TimelineDragHelper } from "./timeline-drag-helper";
 
@@ -57,6 +57,8 @@ type Props = {
   ) => ChartDataType | undefined;
   quickAdd?: React.ReactNode | undefined;
   isEpic?: boolean;
+  extraRows?: { id: string; sidebar: React.ReactNode; chart: React.ReactNode }[];
+  dependencyOverlay?: React.ReactNode;
 };
 
 export const GanttChartMainContent = observer(function GanttChartMainContent(props: Props) {
@@ -82,6 +84,8 @@ export const GanttChartMainContent = observer(function GanttChartMainContent(pro
     quickAdd,
     updateBlockDates,
     isEpic = false,
+    extraRows = [],
+    dependencyOverlay,
   } = props;
   // refs
   const ganttContainerRef = useRef<HTMLDivElement>(null);
@@ -177,6 +181,7 @@ export const GanttChartMainContent = observer(function GanttChartMainContent(pro
                 }
               )}
               ref={ganttContainerRef}
+              style={{ scrollPaddingTop: HEADER_HEIGHT }}
               onScroll={onScroll}
             >
               <GanttChartSidebar
@@ -187,7 +192,20 @@ export const GanttChartMainContent = observer(function GanttChartMainContent(pro
                 blockUpdateHandler={blockUpdateHandler}
                 enableReorder={enableReorder}
                 enableSelection={enableSelection}
-                sidebarToRender={sidebarToRender}
+                sidebarToRender={(sidebarProps) => (
+                  <>
+                    {extraRows.map((row) => (
+                      <div
+                        key={row.id}
+                        className="flex items-center border-b border-subtle px-3"
+                        style={{ height: BLOCK_HEIGHT }}
+                      >
+                        {row.sidebar}
+                      </div>
+                    ))}
+                    {sidebarToRender(sidebarProps)}
+                  </>
+                )}
                 title={title}
                 selectionHelpers={helpers}
                 showAllBlocks={showAllBlocks}
@@ -204,26 +222,41 @@ export const GanttChartMainContent = observer(function GanttChartMainContent(pro
                       paddingBottom: `${HEADER_HEIGHT}px`,
                     }}
                   >
-                    <GanttChartRowList
-                      blockIds={blockIds}
-                      blockUpdateHandler={blockUpdateHandler}
-                      handleScrollToBlock={handleScrollToBlock}
-                      enableAddBlock={enableAddBlock}
-                      showAllBlocks={showAllBlocks}
-                      selectionHelpers={helpers}
-                      ganttContainerRef={ganttContainerRef}
-                    />
-                    <GanttChartBlocksList
-                      blockIds={blockIds}
-                      blockToRender={blockToRender}
-                      enableBlockLeftResize={enableBlockLeftResize}
-                      enableBlockRightResize={enableBlockRightResize}
-                      enableBlockMove={enableBlockMove}
-                      ganttContainerRef={ganttContainerRef}
-                      enableDependency={enableDependency}
-                      showAllBlocks={showAllBlocks}
-                      updateBlockDates={updateBlockDates}
-                    />
+                    <div className="relative" style={{ top: extraRows.length * BLOCK_HEIGHT }}>
+                      <GanttChartRowList
+                        blockIds={blockIds}
+                        blockUpdateHandler={blockUpdateHandler}
+                        handleScrollToBlock={handleScrollToBlock}
+                        enableAddBlock={enableAddBlock}
+                        showAllBlocks={showAllBlocks}
+                        selectionHelpers={helpers}
+                        ganttContainerRef={ganttContainerRef}
+                      />
+                      <GanttChartBlocksList
+                        blockIds={blockIds}
+                        blockToRender={blockToRender}
+                        enableBlockLeftResize={enableBlockLeftResize}
+                        enableBlockRightResize={enableBlockRightResize}
+                        enableBlockMove={enableBlockMove}
+                        ganttContainerRef={ganttContainerRef}
+                        enableDependency={enableDependency}
+                        showAllBlocks={showAllBlocks}
+                        updateBlockDates={updateBlockDates}
+                      />
+                      {dependencyOverlay}
+                    </div>
+                    {extraRows.map((row, index) => (
+                      <div
+                        key={row.id}
+                        className="absolute left-0 w-full border-b border-subtle"
+                        style={{ top: index * BLOCK_HEIGHT, height: BLOCK_HEIGHT }}
+                      >
+                        {row.chart}
+                      </div>
+                    ))}
+                    {extraRows.length > 0 && (
+                      <div style={{ height: (blockIds.length + extraRows.length) * BLOCK_HEIGHT }} />
+                    )}
                   </div>
                 )}
               </div>

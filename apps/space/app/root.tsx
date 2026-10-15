@@ -10,9 +10,9 @@ import appleTouchIcon from "@/app/assets/favicon/apple-touch-icon.png?url";
 import favicon16 from "@/app/assets/favicon/favicon-16x16.png?url";
 import favicon32 from "@/app/assets/favicon/favicon-32x32.png?url";
 import faviconIco from "@/app/assets/favicon/favicon.ico?url";
-import siteWebmanifest from "@/app/assets/favicon/site.webmanifest?url";
 import { LogoSpinner } from "@/components/common/logo-spinner";
 import globalStyles from "@/styles/globals.css?url";
+import brandStyles from "@plane/blocks/brand/styles.css?url";
 // types
 import type { Route } from "./+types/root";
 // local imports
@@ -24,16 +24,17 @@ import interVariableWoff2 from "@fontsource-variable/inter/files/inter-latin-wgh
 import "@fontsource/material-symbols-rounded";
 import "@fontsource/ibm-plex-mono";
 
-const APP_TITLE = "Plane Publish | Make your Plane boards public with one-click";
-const APP_DESCRIPTION = "Plane Publish is a customer feedback management tool built on top of plane.so";
+const APP_TITLE = "SchmidbaurPM Publish";
+const APP_DESCRIPTION = "Public project boards and customer feedback for SchmidbaurPM.";
 
 export const links: Route.LinksFunction = () => [
   { rel: "apple-touch-icon", sizes: "180x180", href: appleTouchIcon },
   { rel: "icon", type: "image/png", sizes: "32x32", href: favicon32 },
   { rel: "icon", type: "image/png", sizes: "16x16", href: favicon16 },
   { rel: "shortcut icon", href: faviconIco },
-  { rel: "manifest", href: siteWebmanifest },
+  { rel: "manifest", href: `${import.meta.env.BASE_URL}site.webmanifest.json` },
   { rel: "stylesheet", href: globalStyles },
+  { rel: "stylesheet", href: brandStyles },
   {
     rel: "preload",
     href: interVariableWoff2,
@@ -74,13 +75,11 @@ export const meta: Route.MetaFunction = () => [
   { name: "description", content: APP_DESCRIPTION },
   { property: "og:title", content: APP_TITLE },
   { property: "og:description", content: APP_DESCRIPTION },
-  { property: "og:url", content: "https://sites.plane.so/" },
   {
     name: "keywords",
     content:
       "software development, customer feedback, software, accelerate, code management, release management, project management, work item tracking, agile, scrum, kanban, collaboration",
   },
-  { name: "twitter:site", content: "@planepowers" },
 ];
 
 export default function Root() {

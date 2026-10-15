@@ -42,6 +42,7 @@ import type { TIssueOperations } from "../issue-detail";
 import { IssueCycleSelect } from "../issue-detail/cycle-select";
 import { IssueLabel } from "../issue-detail/label";
 import { IssueModuleSelect } from "../issue-detail/module-select";
+import { IssueResources } from "@/components/resources/issue-resources";
 
 interface IPeekOverviewProperties {
   workspaceSlug: string;
@@ -83,6 +84,8 @@ export const PeekOverviewProperties = observer(function PeekOverviewProperties(p
         <SidebarPropertyListItem icon={StateOutline} label={t("common.state")}>
           <StateSelect
             testId="work-item-state-select"
+            issueId={issueId}
+            onBlockingChange={(data) => issueOperations.update(workspaceSlug, projectId, issueId, data)}
             value={issue?.state_id}
             onChange={(val) => issueOperations.update(workspaceSlug, projectId, issueId, { state_id: val })}
             projectId={projectId}
@@ -125,7 +128,7 @@ export const PeekOverviewProperties = observer(function PeekOverviewProperties(p
               userIds={createdByDetails?.display_name?.includes("-intake") ? null : createdByDetails?.id}
             />
             <span className="grow truncate text-body-xs-medium leading-5 text-secondary">
-              {createdByDetails?.display_name?.includes("-intake") ? "Plane" : createdByDetails?.display_name}
+              {createdByDetails?.display_name?.includes("-intake") ? "SchmidbaurPM" : createdByDetails?.display_name}
             </span>
           </SidebarPropertyListItem>
         )}
@@ -229,6 +232,7 @@ export const PeekOverviewProperties = observer(function PeekOverviewProperties(p
         <SidebarPropertyListItem icon={LabelsOutline} label={t("common.labels")}>
           <IssueLabel workspaceSlug={workspaceSlug} projectId={projectId} issueId={issueId} disabled={disabled} />
         </SidebarPropertyListItem>
+        <IssueResources key={issueId} workspace={workspaceSlug} projectId={projectId} issueId={issueId} startDate={issue.start_date} endDate={issue.target_date} stateGroup={stateDetails?.group} disabled={disabled} />
       </div>
     </div>
   );

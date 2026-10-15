@@ -7,7 +7,7 @@
 import { useState } from "react";
 import { observer } from "mobx-react";
 import type { Control } from "react-hook-form";
-import { Controller } from "react-hook-form";
+import { Controller, useFormContext } from "react-hook-form";
 import { Icon as PropelIcon } from "@makeplane/propel/components/icon";
 import { Menu, MenuContent, MenuItem, MenuTrigger } from "@makeplane/propel/components/menu";
 import { Pill } from "@makeplane/propel/components/pill";
@@ -52,6 +52,7 @@ type TIssueDefaultPropertiesProps = {
 };
 
 export const IssueDefaultProperties = observer(function IssueDefaultProperties(props: TIssueDefaultPropertiesProps) {
+  const { setValue } = useFormContext<TIssue>();
   const {
     control,
     id,
@@ -93,6 +94,8 @@ export const IssueDefaultProperties = observer(function IssueDefaultProperties(p
         render={({ field: { value, onChange } }) => (
           <StateSelect
             testId="create-work-item-state-select"
+            issueId={!isDraft ? id : undefined}
+            onBlockingChange={isDraft ? undefined : (data) => { if (data.state_id) onChange(data.state_id); setValue("blocker_issue_ids", data.blocker_issue_ids, { shouldDirty: true, shouldValidate: true }); handleFormChange(); }}
             // an empty state shows the project's default state, as the legacy dropdown did
             value={value || getProjectDefaultStateId(projectId)}
             onChange={(stateId) => {

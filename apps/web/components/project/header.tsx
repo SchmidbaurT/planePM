@@ -23,6 +23,7 @@ import { useUserPermissions } from "@/hooks/store/user";
 // components
 import HeaderFilters from "./filters";
 import { ProjectSearch } from "./search-projects";
+import { ProjectViewControls } from "./view-controls";
 
 export const ProjectsBaseHeader = observer(function ProjectsBaseHeader() {
   // i18n
@@ -31,13 +32,14 @@ export const ProjectsBaseHeader = observer(function ProjectsBaseHeader() {
   const { toggleCreateProjectModal } = useCommandPalette();
   const { allowPermissions } = useUserPermissions();
 
-  const pathname = usePathname();
+  const pathname = usePathname().replace(/\/$/, "");
   // auth
   const isAuthorizedUser = allowPermissions(
     [EUserPermissions.ADMIN, EUserPermissions.MEMBER],
     EUserPermissionsLevel.WORKSPACE
   );
   const isArchived = pathname.includes("/archives");
+  const isOverview = pathname.endsWith("/dashboard") || pathname.endsWith("/timeline");
 
   return (
     <Header>
@@ -55,9 +57,10 @@ export const ProjectsBaseHeader = observer(function ProjectsBaseHeader() {
         </Breadcrumbs>
       </Header.LeftItem>
       <Header.RightItem>
-        <ProjectSearch />
+        {!isArchived && <div className="hidden md:flex"><ProjectViewControls /></div>}
+        {!isOverview && <ProjectSearch />}
         <div className="hidden md:flex">
-          <HeaderFilters />
+          {!isOverview && <HeaderFilters />}
         </div>
         {isAuthorizedUser && !isArchived ? (
           <>

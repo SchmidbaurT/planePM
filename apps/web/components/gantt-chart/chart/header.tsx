@@ -27,23 +27,77 @@ type Props = {
   loaderTitle: string;
   toggleFullScreenMode: () => void;
   showToday: boolean;
+  itemCount?: number;
+  dependencyControl?: {
+    enabled: boolean;
+    toggle: () => void;
+    mode: "all" | "focus" | "conflicts";
+    setMode: (mode: "all" | "focus" | "conflicts") => void;
+    focusId: string;
+    setFocusId: (id: string) => void;
+    options: { id: string; name: string }[];
+  };
 };
 
 export const GanttChartHeader = observer(function GanttChartHeader(props: Props) {
   const { t } = useTranslation();
-  const { blockIds, fullScreenMode, handleChartView, handleToday, loaderTitle, toggleFullScreenMode, showToday } =
-    props;
+  const {
+    blockIds,
+    fullScreenMode,
+    handleChartView,
+    handleToday,
+    loaderTitle,
+    toggleFullScreenMode,
+    showToday,
+    itemCount,
+  } = props;
   // chart hook
   const { currentView } = useTimeLineChartStore();
 
   return (
     <Row
-      className="relative flex w-full flex-shrink-0 flex-wrap items-center gap-2 bg-surface-1 py-2 whitespace-nowrap"
-      style={{ height: `${GANTT_BREADCRUMBS_HEIGHT}px` }}
+      className="relative flex h-auto w-full flex-shrink-0 flex-wrap items-center gap-2 bg-surface-1 py-2 whitespace-nowrap"
+      style={{ minHeight: `${GANTT_BREADCRUMBS_HEIGHT}px` }}
     >
+      {props.dependencyControl && (
+        <label className="flex items-center gap-1 text-11">
+          <input type="checkbox" checked={props.dependencyControl.enabled} onChange={props.dependencyControl.toggle} />
+          {t("planning.dependencies")}
+        </label>
+      )}
+      {props.dependencyControl?.enabled && (
+        <>
+          <select
+            className="max-w-40 rounded-sm border border-subtle bg-surface-1 p-1 text-11"
+            aria-label={t("planning.connection_view")}
+            value={props.dependencyControl.mode}
+            onChange={(event) => props.dependencyControl?.setMode(event.target.value as "all" | "focus" | "conflicts")}
+          >
+            <option value="all">{t("planning.all_dependencies")}</option>
+            <option value="focus">{t("planning.focus_task")}</option>
+            <option value="conflicts">{t("planning.conflicts_only")}</option>
+          </select>
+          {props.dependencyControl.mode === "focus" && (
+            <select
+              className="max-w-52 rounded-sm border border-subtle bg-surface-1 p-1 text-11"
+              aria-label={t("planning.focus_task")}
+              value={props.dependencyControl.focusId}
+              onChange={(event) => props.dependencyControl?.setFocusId(event.target.value)}
+            >
+              <option value="">{t("select")}</option>
+              {props.dependencyControl.options.map((option) => (
+                <option key={option.id} value={option.id}>
+                  {option.name}
+                </option>
+              ))}
+            </select>
+          )}
+        </>
+      )}
       <div className="ml-auto">
+        <div id="timeline-dependency-summary" className="mb-1 flex flex-wrap gap-2 text-11" />
         <div className="ml-auto text-11 font-medium text-tertiary">
-          {blockIds ? `${blockIds.length} ${loaderTitle}` : t("common.loading")}
+          {blockIds ? `${itemCount ?? blockIds.length} ${loaderTitle}` : t("common.loading")}
         </div>
       </div>
 

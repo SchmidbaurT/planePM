@@ -7,8 +7,51 @@
 import { BlockingOutline, CloseCircleOutline, DuplicateOfOutline, RelatesToOutline } from "@makeplane/propel/icons";
 import type { TRelationObject } from "@/components/issues/issue-detail-widgets/relations";
 import type { TIssueRelationTypes } from "@plane/types";
+import { ArrowRight } from "lucide-react";
 
 export const ISSUE_RELATION_OPTIONS: Record<TIssueRelationTypes, TRelationObject> = {
+  finish_to_start: {
+    key: "finish_to_start",
+    i18n_label: "planning.finish_start_successor",
+    className: "bg-layer-1 text-secondary",
+    icon: (size) => <ArrowRight size={size} />,
+    placeholder: "None",
+  },
+  start_after_finish: {
+    key: "start_after_finish",
+    i18n_label: "planning.finish_start_predecessor",
+    className: "bg-layer-1 text-secondary",
+    icon: (size) => <ArrowRight size={size} />,
+    placeholder: "None",
+  },
+  start_before: {
+    key: "start_before",
+    i18n_label: "planning.start_start_successor",
+    className: "bg-layer-1 text-secondary",
+    icon: (size) => <ArrowRight size={size} />,
+    placeholder: "None",
+  },
+  start_after: {
+    key: "start_after",
+    i18n_label: "planning.start_start_predecessor",
+    className: "bg-layer-1 text-secondary",
+    icon: (size) => <ArrowRight size={size} />,
+    placeholder: "None",
+  },
+  finish_before: {
+    key: "finish_before",
+    i18n_label: "planning.finish_finish_successor",
+    className: "bg-layer-1 text-secondary",
+    icon: (size) => <ArrowRight size={size} />,
+    placeholder: "None",
+  },
+  finish_after: {
+    key: "finish_after",
+    i18n_label: "planning.finish_finish_predecessor",
+    className: "bg-layer-1 text-secondary",
+    icon: (size) => <ArrowRight size={size} />,
+    placeholder: "None",
+  },
   relates_to: {
     key: "relates_to",
     i18n_label: "issue.relation.relates_to",
@@ -39,4 +82,4 @@ export const ISSUE_RELATION_OPTIONS: Record<TIssueRelationTypes, TRelationObject
   },
 };
 
-export const useTimeLineRelationOptions = () => ISSUE_RELATION_OPTIONS;
+export const useTimeLineRelationOptions = (): Partial<Record<TIssueRelationTypes, TRelationObject>> => Object.fromEntries(Object.entries(ISSUE_RELATION_OPTIONS).filter(([key]) => !["relates_to", "duplicate", "blocking"].includes(key)));

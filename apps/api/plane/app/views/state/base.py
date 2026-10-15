@@ -76,6 +76,14 @@ class StateViewSet(BaseViewSet):
 
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER, ROLE.GUEST])
     def list(self, request, slug, project_id):
+        from plane.db.models import Project
+        from plane.utils.issue_blocking import blocking_states
+        from plane.utils.resource_booking import lock_resource_workspace
+        from django.db import transaction
+        with transaction.atomic():
+            project = Project.objects.get(pk=project_id, workspace__slug=slug)
+            lock_resource_workspace(project.workspace_id)
+            blocking_states(project)
         states = StateSerializer(self.get_queryset(), many=True).data
 
         grouped_states = defaultdict(list)
@@ -104,6 +112,8 @@ class StateViewSet(BaseViewSet):
     @invalidate_cache(path="workspaces/:slug/states/", url_params=True, user=False)
     @allow_permission([ROLE.ADMIN])
     def mark_as_default(self, request, slug, project_id, pk):
+        if State.objects.filter(pk=pk, project_id=project_id, is_blocked=True).exists():
+            return Response({"code": "BLOCKING_SYSTEM_STATE"}, status=400)
         # Select all the states which are marked as default
         _ = State.objects.filter(workspace__slug=slug, project_id=project_id, default=True).update(default=False)
         _ = State.objects.filter(workspace__slug=slug, project_id=project_id, pk=pk).update(default=True)
@@ -113,6 +123,8 @@ class StateViewSet(BaseViewSet):
     @allow_permission([ROLE.ADMIN])
     def destroy(self, request, slug, project_id, pk):
         state = State.objects.get(is_triage=False, pk=pk, project_id=project_id, workspace__slug=slug)
+        if state.is_blocked or state.blocked_release_projects.exists():
+            return Response({"code": "BLOCKING_SYSTEM_STATE"}, status=400)
 
         if state.default:
             return Response(

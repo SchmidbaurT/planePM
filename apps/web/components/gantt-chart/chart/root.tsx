@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { observer } from "mobx-react";
 import { createPortal } from "react-dom";
 // plane imports
@@ -16,6 +16,7 @@ import { GanttChartHeader, GanttChartMainContent } from "@/components/gantt-char
 // hooks
 import { useUserProfile } from "@/hooks/store/user";
 import { useTimeLineChartStore } from "@/hooks/use-timeline-chart";
+import { TimelineDependencyViewContext } from "../contexts";
 //
 import { SIDEBAR_WIDTH } from "../constants";
 import { currentViewDataWithView } from "../data";
@@ -45,6 +46,10 @@ type ChartViewRootProps = {
   quickAdd?: React.ReactNode | undefined;
   showToday: boolean;
   isEpic?: boolean;
+  initialView?: TGanttViews;
+  extraRows?: { id: string; sidebar: React.ReactNode; chart: React.ReactNode }[];
+  itemCount?: number;
+  dependencyOverlay?: React.ReactNode;
 };
 
 const timelineViewHelpers = {
@@ -77,10 +82,19 @@ export const ChartViewRoot = observer(function ChartViewRoot(props: ChartViewRoo
     showToday,
     updateBlockDates,
     isEpic = false,
+    initialView,
+    extraRows,
+    itemCount,
+    dependencyOverlay,
   } = props;
   // states
   const [itemsContainerWidth, setItemsContainerWidth] = useState(0);
   const [fullScreenMode, setFullScreenMode] = useState(false);
+  const [showDependencies, setShowDependencies] = useState(true);
+  const [dependencyMode, setDependencyMode] = useState<"all" | "focus" | "conflicts">("all");
+  const [focusId, setFocusId] = useState("");
+  const dependencyView = useMemo(() => ({ mode: dependencyMode, focusId, setFocusId }), [dependencyMode, focusId]);
+  const scrollTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   // hooks
   const {
     currentView,
@@ -90,6 +104,7 @@ export const ChartViewRoot = observer(function ChartViewRoot(props: ChartViewRoo
     updateCurrentViewData,
     updateRenderView,
     updateAllBlocksOnChartChangeWhileDragging,
+    getBlockById,
   } = useTimeLineChartStore();
   const { data } = useUserProfile();
   const startOfWeek = data?.start_of_the_week;
@@ -129,8 +144,10 @@ export const ChartViewRoot = observer(function ChartViewRoot(props: ChartViewRoo
         updateCurrentView(view);
         updateRenderView(currentRender.payload);
         setItemsContainerWidth(currentRender.scrollWidth);
-        setTimeout(() => {
+        if (scrollTimer.current !== null) clearTimeout(scrollTimer.current);
+        scrollTimer.current = setTimeout(() => {
           handleScrollToCurrentSelectedDate(currentRender.state, currentRender.state.data.currentDate);
+          scrollTimer.current = null;
         }, 50);
       }
     }
@@ -142,9 +159,12 @@ export const ChartViewRoot = observer(function ChartViewRoot(props: ChartViewRoo
 
   // handling the scroll positioning from left and right
   useEffect(() => {
-    handleToday();
+    updateCurrentViewRenderPayload(null, initialView ?? currentView);
+    return () => {
+      if (scrollTimer.current !== null) clearTimeout(scrollTimer.current);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [initialView]);
 
   const updateItemsContainerWidth = (width: number) => {
     const scrollContainer = document.querySelector("#gantt-container") as HTMLDivElement;
@@ -164,6 +184,7 @@ export const ChartViewRoot = observer(function ChartViewRoot(props: ChartViewRoo
     if (!scrollContainer) return;
 
     const clientVisibleWidth: number = scrollContainer?.clientWidth;
+    const sidebarWidth = document.getElementById("gantt-sidebar")?.getBoundingClientRect().width ?? SIDEBAR_WIDTH;
     let scrollWidth: number = 0;
     let daysDifference: number = 0;
     daysDifference = getNumberOfDaysBetweenTwoDates(currentState.data.startDate, date);
@@ -171,7 +192,7 @@ export const ChartViewRoot = observer(function ChartViewRoot(props: ChartViewRoo
     scrollWidth =
       Math.abs(daysDifference) * currentState.data.dayWidth -
       (clientVisibleWidth / 2 - currentState.data.dayWidth) +
-      SIDEBAR_WIDTH / 2;
+      sidebarWidth / 2;
 
     scrollContainer.scrollLeft = scrollWidth;
   };
@@ -179,45 +200,65 @@ export const ChartViewRoot = observer(function ChartViewRoot(props: ChartViewRoo
   const portalContainer = document.getElementById("full-screen-portal") as HTMLElement;
 
   const content = (
-    <div
-      className={cn("shadow relative flex h-full flex-col rounded-xs bg-surface-1 select-none", {
-        "inset-0 z-[25] bg-surface-1": fullScreenMode,
-        "border-[0.5px] border-subtle": border,
-      })}
-    >
-      <GanttChartHeader
-        blockIds={blockIds}
-        fullScreenMode={fullScreenMode}
-        toggleFullScreenMode={() => setFullScreenMode((prevData) => !prevData)}
-        handleChartView={(key) => updateCurrentViewRenderPayload(null, key)}
-        handleToday={handleToday}
-        loaderTitle={loaderTitle}
-        showToday={showToday}
-      />
-      <GanttChartMainContent
-        blockIds={blockIds}
-        loadMoreBlocks={loadMoreBlocks}
-        canLoadMoreBlocks={canLoadMoreBlocks}
-        blockToRender={blockToRender}
-        blockUpdateHandler={blockUpdateHandler}
-        bottomSpacing={bottomSpacing}
-        enableBlockLeftResize={enableBlockLeftResize}
-        enableBlockMove={enableBlockMove}
-        enableBlockRightResize={enableBlockRightResize}
-        enableReorder={enableReorder}
-        enableSelection={enableSelection}
-        enableAddBlock={enableAddBlock}
-        enableDependency={enableDependency}
-        itemsContainerWidth={itemsContainerWidth}
-        showAllBlocks={showAllBlocks}
-        sidebarToRender={sidebarToRender}
-        title={title}
-        updateCurrentViewRenderPayload={updateCurrentViewRenderPayload}
-        quickAdd={quickAdd}
-        updateBlockDates={updateBlockDates}
-        isEpic={isEpic}
-      />
-    </div>
+    <TimelineDependencyViewContext.Provider value={dependencyView}>
+      <div
+        className={cn("shadow relative flex h-full flex-col rounded-xs bg-surface-1 select-none", {
+          "inset-0 z-[25] bg-surface-1": fullScreenMode,
+          "border-[0.5px] border-subtle": border,
+        })}
+      >
+        <GanttChartHeader
+          blockIds={blockIds}
+          fullScreenMode={fullScreenMode}
+          toggleFullScreenMode={() => setFullScreenMode((prevData) => !prevData)}
+          handleChartView={(key) => updateCurrentViewRenderPayload(null, key)}
+          handleToday={handleToday}
+          loaderTitle={loaderTitle}
+          showToday={showToday}
+          itemCount={itemCount}
+          dependencyControl={
+            dependencyOverlay
+              ? {
+                  enabled: showDependencies,
+                  toggle: () => setShowDependencies((value) => !value),
+                  mode: dependencyMode,
+                  setMode: setDependencyMode,
+                  focusId,
+                  setFocusId,
+                  options: blockIds
+                    .map((id) => ({ id, name: getBlockById(id)?.data?.name }))
+                    .filter((item): item is { id: string; name: string } => !!item.name),
+                }
+              : undefined
+          }
+        />
+        <GanttChartMainContent
+          blockIds={blockIds}
+          loadMoreBlocks={loadMoreBlocks}
+          canLoadMoreBlocks={canLoadMoreBlocks}
+          blockToRender={blockToRender}
+          blockUpdateHandler={blockUpdateHandler}
+          bottomSpacing={bottomSpacing}
+          enableBlockLeftResize={enableBlockLeftResize}
+          enableBlockMove={enableBlockMove}
+          enableBlockRightResize={enableBlockRightResize}
+          enableReorder={enableReorder}
+          enableSelection={enableSelection}
+          enableAddBlock={enableAddBlock}
+          enableDependency={enableDependency}
+          itemsContainerWidth={itemsContainerWidth}
+          showAllBlocks={showAllBlocks}
+          sidebarToRender={sidebarToRender}
+          title={title}
+          updateCurrentViewRenderPayload={updateCurrentViewRenderPayload}
+          quickAdd={quickAdd}
+          updateBlockDates={updateBlockDates}
+          isEpic={isEpic}
+          extraRows={extraRows}
+          dependencyOverlay={showDependencies ? dependencyOverlay : undefined}
+        />
+      </div>
+    </TimelineDependencyViewContext.Provider>
   );
 
   return fullScreenMode && portalContainer ? createPortal(content, portalContainer) : content;

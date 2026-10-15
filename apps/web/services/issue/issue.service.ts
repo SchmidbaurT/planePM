@@ -5,6 +5,8 @@
  */
 
 // plane imports
+import type { AxiosRequestConfig } from "axios";
+import { mutate } from "swr";
 import { API_BASE_URL } from "@plane/constants";
 import { EIssueServiceType } from "@plane/types";
 import type {
@@ -27,6 +29,45 @@ export class IssueService extends APIService {
   constructor(serviceType: TIssueServiceType = EIssueServiceType.ISSUES) {
     super(API_BASE_URL);
     this.serviceType = serviceType;
+  }
+
+  private refreshPlanning(url: string) {
+    const workspace = url.match(/^\/api\/workspaces\/([^/]+)\//)?.[1];
+    if (!workspace) return;
+    if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent("plane:issues-changed", { detail: { workspace } }));
+    void mutate(
+      (key) =>
+        Array.isArray(key) &&
+        key[1] === workspace &&
+        [
+          "portfolio",
+          "portfolio-detail",
+          "timeline-relations",
+          "work-plan",
+          "milestones",
+          "resource-availability",
+          "resource-preview",
+          "issue-resources",
+        ].includes(key[0])
+    ).catch((error: unknown) => console.error("Unable to refresh planning data", error));
+  }
+
+  override async post(url: string, data = {}, config: AxiosRequestConfig = {}) {
+    const response = await super.post(url, data, config);
+    this.refreshPlanning(url);
+    return response;
+  }
+
+  override async patch(url: string, data = {}, config: AxiosRequestConfig = {}) {
+    const response = await super.patch(url, data, config);
+    this.refreshPlanning(url);
+    return response;
+  }
+
+  override async delete(url: string, data?: object, config: AxiosRequestConfig = {}) {
+    const response = await super.delete(url, data, config);
+    this.refreshPlanning(url);
+    return response;
   }
 
   async createIssue(workspaceSlug: string, projectId: string, data: Partial<TIssue>): Promise<TIssue> {
@@ -223,7 +264,12 @@ export class IssueService extends APIService {
       });
   }
 
-  async patchIssue(workspaceSlug: string, projectId: string, issueId: string, data: Partial<TIssue>): Promise<any> {
+  async patchIssue(
+    workspaceSlug: string,
+    projectId: string,
+    issueId: string,
+    data: Partial<TIssue> | { state: string }
+  ): Promise<any> {
     return this.patch(`/api/workspaces/${workspaceSlug}/projects/${projectId}/${this.serviceType}/${issueId}/`, data)
       .then((response) => response?.data)
       .catch((error) => {

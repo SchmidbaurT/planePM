@@ -28,6 +28,7 @@ import { HIGHLIGHT_CLASS, getIssueBlockId } from "@/components/issues/issue-layo
 import { IssueIdentifier } from "@/components/issues/issue-detail/issue-identifier";
 // hooks
 import { useIssueDetail } from "@/hooks/store/use-issue-detail";
+import { useIssueBlocked } from "@/hooks/store/use-issue-blocked";
 import { useKanbanView } from "@/hooks/store/use-kanban-view";
 import { useProject } from "@/hooks/store/use-project";
 import useIssuePeekOverviewRedirection from "@/hooks/use-issue-peek-overview-redirection";
@@ -35,6 +36,7 @@ import { usePlatformOS } from "@/hooks/use-platform-os";
 // local components
 import type { TRenderQuickActions } from "../list/list-view-types";
 import { IssueProperties } from "../properties/all-properties";
+import { WorkItemParentLabel } from "../parent-label";
 
 interface IssueBlockProps {
   issueId: string;
@@ -129,6 +131,8 @@ const KanbanIssueDetailsBlock = observer(function KanbanIssueDetailsBlock(props:
         </div>
       </Tooltip>
 
+      <WorkItemParentLabel parentId={issue.parent_id} />
+
       <IssueProperties
         className="flex flex-wrap items-center gap-2 pt-1.5 whitespace-nowrap text-tertiary"
         issue={issue}
@@ -143,6 +147,7 @@ const KanbanIssueDetailsBlock = observer(function KanbanIssueDetailsBlock(props:
 });
 
 export const KanbanIssueBlock = observer(function KanbanIssueBlock(props: IssueBlockProps) {
+  const isBlocked = useIssueBlocked(props.issueId);
   const {
     issueId,
     groupId,
@@ -266,6 +271,7 @@ export const KanbanIssueBlock = observer(function KanbanIssueBlock(props: IssueB
           ref={cardRef}
           className={cn(
             "block w-full rounded-lg border border-subtle bg-layer-2 p-3 text-13 shadow-raised-100 outline-[0.5px] outline-transparent transition-all hover:border-strong hover:shadow-raised-200",
+            { "bg-danger-subtle border-danger-strong": isBlocked },
             { "hover:cursor-pointer": isDragAllowed },
             { "border border-accent-strong hover:border-accent-strong": getIsIssuePeeked(issue.id) },
             { "z-[100] bg-layer-1": isCurrentBlockDragging }

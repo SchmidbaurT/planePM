@@ -88,6 +88,7 @@ class State(ProjectBaseModel):
         max_length=20,
     )
     is_triage = models.BooleanField(default=False)
+    is_blocked = models.BooleanField(default=False)
     default = models.BooleanField(default=False)
     external_source = models.CharField(max_length=255, null=True, blank=True)
     external_id = models.CharField(max_length=255, blank=True, null=True)
@@ -107,7 +108,9 @@ class State(ProjectBaseModel):
                 fields=["name", "project"],
                 condition=Q(deleted_at__isnull=True),
                 name="state_unique_name_project_when_deleted_at_null",
-            )
+            ),
+            models.UniqueConstraint(fields=["project"], condition=Q(deleted_at__isnull=True, is_blocked=True), name="state_one_blocked_per_project"),
+            models.CheckConstraint(condition=Q(is_blocked=False) | Q(group="started", default=False), name="state_blocked_is_open_not_default"),
         ]
         verbose_name = "State"
         verbose_name_plural = "States"
